@@ -1,0 +1,190 @@
+/*******************************************************************************************
+*                                                                                          *
+*  CAO-Faktura für Windows Version 1.2                                                     *
+*  Copyright (C) 2003 Jan Pokrandt / Jan@JP-SOFT.de                                        *
+*                                                                                          *
+*  This program is free software; you can redistribute it and/or                           *
+*  modify it under the terms of the GNU General Public License                             *
+*  as published by the Free Software Foundation; either version 2                          *
+*  of the License, or any later version.                                                   *
+*                                                                                          *
+*  This program is distributed in the hope that it will be useful,                         *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of                          *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                           *
+*  GNU General Public License for more details.                                            *
+*                                                                                          *
+*  You should have received a copy of the GNU General Public License                       *
+*  along with this program; if not, write to the Free Software                             *
+*  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+*                                                                                          *
+*  ******* CAO-Faktura comes with ABSOLUTELY NO WARRANTY ***************                   *
+*                                                                                          *
+*  Programm     : CAO-Faktura                                                              *
+*  Modul        : OSC-CAO_install.txt                                                      *
+*  Stand        : 09.08.2003                                                               *
+*  Version      : 0.24                                                                     *
+*  Beschreibung : Updateanweisungen für OSC zum Export nach CAO                            *
+*                                                                                          *
+*  based on:                                                                               *
+* (c) 2000 - 2001 The Exchange Project                                                     *
+* (c) 2001 - 2003 osCommerce, Open Source E-Commerce Solutions                             *
+* (c) 2003 IN-Solution, Henri Schmidhuber                                                  *
+* (c) 2003 RV-Design, Raphael Vullriede                                                    *
+* Released under the GNU General Public License                                            *
+*                                                                                          *
+*  History :                                                                               *
+*                                                                                          *
+*  - 20.07.2003 HS Änderungen für OSC für                                                  *
+*  -    12.2004 RV Erweiterungen für OSCommerce und CAO 1.2.6.1                            *
+*  - 11.12.2004 JP Umgeschrieben für XTC                                                   *
+*******************************************************************************************/
+
+Ich habe die hier beschriebenen Änderungen auf der Basis eines XTC-Shops 
+Version 2.0 RC1.2 gemacht. Ob dies So auch mit anderen Versionen zusammenarbeiten 
+kann ich nicht sagen.
+
+Achtung : Die Scripte sind nicht vollständig getestet !!!
+Feedback ist willkommen.
+
+
+cao_import.php und xml_export.php in den Adminordner kopieren
+
+In der xml_export am Anfang die speziellen Order_total Klassen anpassen, 
+bzw erweitern (also eigene verwendete hinzufügen).
+Dies ist nur notwendig wenn ihr spezielle Contribs im Shop installiert habt.
+
+Folgende Anweisung in der Datenbank ausführen (z.B. via phpMyAdmin):
+
+ALTER TABLE `orders` 
+ ADD `payment_class` VARCHAR( 32 ) NOT NULL ,
+ ADD `shipping_method` VARCHAR( 32 ) NOT NULL,
+ ADD `shipping_class` VARCHAR( 32 ) NOT NULL ;
+
+ALTER TABLE `orders` 
+ ADD `billing_country_iso_code_2` CHAR( 2 ) NOT NULL AFTER `billing_country` ;
+
+ALTER TABLE `orders` 
+ ADD `delivery_country_iso_code_2` CHAR( 2 ) NOT NULL AFTER `delivery_country` ;
+
+ALTER TABLE `orders`
+ ADD `billing_firstname` VARCHAR( 32 ) NOT NULL AFTER `billing_name` ,
+ ADD `billing_lastname` VARCHAR( 32 ) NOT NULL AFTER `billing_firstname` ;
+
+ALTER TABLE `orders`
+ ADD `delivery_firstname` VARCHAR( 32 ) NOT NULL AFTER `delivery_name` ,
+ ADD `delivery_lastname` VARCHAR( 32 ) NOT NULL AFTER `delivery_firstname` ;
+
+ALTER TABLE `orders`
+ CHANGE `payment_method` `payment_method` VARCHAR( 255 ) NOT NULL;
+
+ALTER TABLE `orders`
+ CHANGE `shipping_method` `shipping_method` VARCHAR( 255 ) NOT NULL;
+
+
+Wenn Ihr den Logger verwenden wollt, dann müßt ihr auch die beiliegende Datei 
+cao_log.sql ausführen.
+
+
+catalog/checkout_process.php:
+wie folgt erweitern:
+ca Zeile 103:
+
+  if ($_SESSION['credit_covers']!='1') {
+  $sql_data_array = array('customers_id' => $_SESSION['customer_id'],
+                          'customers_name' => $order->customer['firstname'] . ' ' . $order->customer['lastname'],
+                          'customers_cid' => $order->customer['csID'],
+                          'customers_company' => $order->customer['company'],
+                          'customers_status' => $order['status'],
+                          'customers_status_name' => $_SESSION['customers_status']['customers_status_name'],
+                          'customers_status_image' => $order['status_image'],
+                          'customers_status_discount' => $discount,
+                          'customers_status' => $customer_status_value['customers_status'],
+                          'customers_street_address' => $order->customer['street_address'],
+                          'customers_suburb' => $order->customer['suburb'],
+                          'customers_city' => $order->customer['city'],
+                          'customers_postcode' => $order->customer['postcode'],
+                          'customers_state' => $order->customer['state'],
+                          'customers_country' => $order->customer['country']['title'],
+                          'customers_telephone' => $order->customer['telephone'],
+                          'customers_email_address' => $order->customer['email_address'],
+                          'customers_address_format_id' => $order->customer['format_id'],
+                          'delivery_name' => $order->delivery['firstname'] . ' ' . $order->delivery['lastname'],
+                          'delivery_firstname' => $order->delivery['firstname'], //JAN 
+	                       'delivery_lastname' => $order->delivery['lastname'], //JAN										
+                          'delivery_company' => $order->delivery['company'],
+                          'delivery_street_address' => $order->delivery['street_address'],
+                          'delivery_suburb' => $order->delivery['suburb'],
+                          'delivery_city' => $order->delivery['city'],
+                          'delivery_postcode' => $order->delivery['postcode'],
+                          'delivery_state' => $order->delivery['state'],
+                          'delivery_country' => $order->delivery['country']['title'],
+                          'delivery_country_iso_code_2' => $order->delivery['country']['iso_code_2'], //JAN
+                          'delivery_address_format_id' => $order->delivery['format_id'],
+                          'billing_name' => $order->billing['firstname'] . ' ' . $order->billing['lastname'],
+                          'billing_firstname' => $order->billing['firstname'],  //JAN
+                          'billing_lastname' => $order->billing['lastname'],   //JAN						
+                          'billing_company' => $order->billing['company'],
+                          'billing_street_address' => $order->billing['street_address'],
+                          'billing_suburb' => $order->billing['suburb'],
+                          'billing_city' => $order->billing['city'],
+                          'billing_postcode' => $order->billing['postcode'],
+                          'billing_state' => $order->billing['state'],
+                          'billing_country' => $order->billing['country']['title'],
+			  
+                          'billing_address_format_id' => $order->billing['format_id'],
+                          'payment_method' => $order->info['payment_method'],
+                          'payment_class' => $order->info['payment_class'],
+                          'shipping_method' => $order->info['shipping_method'],
+                          'shipping_class' => $order->info['shipping_class'],
+                          'billing_country_iso_code_2' => $order->billing['country']['iso_code_2'], //JAN
+                          'cc_type' => $order->info['cc_type'],
+                          'cc_owner' => $order->info['cc_owner'],
+                          'cc_number' => $order->info['cc_number'],
+                          'cc_expires' => $order->info['cc_expires'],
+ // BMC CC Mod Start
+                          'cc_start' => $order->info['cc_start'],
+                          'cc_cvv' => $order->info['cc_cvv'],
+                          'cc_issue' => $order->info['cc_issue'],
+// BMC CC Mod End
+                          'date_purchased' => 'now()',
+                          'orders_status' => $order->info['order_status'],
+                          'currency' => $order->info['currency'],
+                          'currency_value' => $order->info['currency_value'],
+                          'customers_ip' =>  $_SERVER['REMOTE_ADDR'],
+                          'language'=>$_SESSION['language'],
+                          'comments' => $order->info['comments']);
+
+
+Die Zeilen die am Ende mit //JAN gekennzeichnet sind, sind hinzuzufügen.
+
+
+
+catalog/includes/classes/order.php
+wie folgt erweitern:
+
+ab ca Zeile 220  function cart() {
+
+  ca Zeile 237 wird wie folgt geändert
+
+      $this->info = array('order_status' => DEFAULT_ORDERS_STATUS_ID,
+                          'currency' => $_SESSION['currency'],
+                          'currency_value' => $currencies->currencies[$_SESSION['currency']]['value'],
+                          'payment_method' => $_SESSION['payment'],
+                          'cc_type' => $GLOBALS['cc_type'],
+                          'cc_owner' => $GLOBALS['cc_owner'],
+                          'cc_number' => $GLOBALS['cc_number'],
+                          'cc_expires' => $GLOBALS['cc_expires'],
+                          // BMC CC Mod Start
+                          'cc_start' => (isset($GLOBALS['cc_start']) ? $GLOBALS['cc_start'] : ''),
+                          'cc_issue' => (isset($GLOBALS['cc_issue']) ? $GLOBALS['cc_issue'] : ''),
+                          'cc_cvv' => (isset($GLOBALS['cc_cvv']) ? $GLOBALS['cc_cvv'] : ''),
+                          // BMC CC Mod End
+                          'shipping_method' => $_SESSION['shipping']['title'],
+                          'shipping_cost' => $_SESSION['shipping']['cost'],
+                          'comments' => $_SESSION['comments'],
+                          'shipping_class' =>  ( (strpos($shipping['id'],'_') > 0) ?  substr( strrev( strchr(strrev($shipping['id']),'_') ),0,-1) : $shipping['id'] ),
+                          'payment_class' => $_SESSION['payment'],
+                          );  
+
+
+
