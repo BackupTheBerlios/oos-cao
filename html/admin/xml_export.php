@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: xml_export.php,v 1.5 2005/01/10 10:41:16 r23 Exp $
+   $Id: xml_export.php,v 1.6 2005/01/10 11:05:09 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -120,13 +120,12 @@
   $iso_639_2 = 'deu';
 
 // check permissions for XML-Access
+  $user = $_GET['user'];
+  $password = $_GET['password'];
 
-$user = $_GET['user'];
-$password = $_GET['password'];
-
-if (substr($password,0,2)=='%%') {
- $password=md5(substr($password,2,40));
-}
+  if (substr($password,0,2) == '%%') {
+    $password = md5(substr($password,2,40));
+  }
 
   if (LOGGER == 'true') {
     // log data into db.
@@ -203,10 +202,7 @@ if (substr($password,0,2)=='%%') {
       oosRedirect(OOS_HTTP_SERVER . OOS_ADMIN . $oosFilename['xml_export'] . '?error=WRONG+LOGIN&code=101');
     } else {
       $check_admin = $check_admin_result->fields;
-      
-      if (substr($password,0,2) == '%%') {
-        $password = md5(substr($password,2,40));
-      }
+
       if ($password != $check_admin['login_password']) {
         oosRedirect(OOS_HTTP_SERVER . OOS_ADMIN . $oosFilename['xml_export'] . '?error=WRONG+LOGIN&code=101');
       } else {
@@ -232,69 +228,75 @@ if (substr($password,0,2)=='%%') {
 
           $action = (isset($_GET['action']) ? $_GET['action'] : '');
 
-         if (oosNotNull($action)) {
-           switch ($action) { 
-             case 'categories_export':
-               oosSetTimeLimit(0);
+          if (oosNotNull($action)) {
+            switch ($action) { 
+              case 'categories_export':
+                oosSetTimeLimit(0);
 
-               $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-                         '<CATEGORIES>' . "\n";
+                $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
+                          '<CATEGORIES>' . "\n";
+                    
+                echo $schema;
                    
-               echo $schema;
-                  
-               $cat_query = $db->Execute("SELECT categories_id, categories_image, parent_id, sort_order, date_added, last_modified
-                                          FROM " . $oosDBTable['categories'] . " 
-                                          ORDER BY parent_id, categories_id");
-               $cat_result = $db->Execute($cat_query);
+                $cat_query = "SELECT categories_id, categories_image, parent_id, sort_order, date_added, last_modified
+                              FROM " . $oosDBTable['categories'] . " 
+                              ORDER BY parent_id, categories_id";
+                $cat_result = $db->Execute($cat_query);
 
-               while ($cat = $cat_result->fields) {
-                 $schema  = '<CATEGORIES_DATA>' . "\n" .
-                     '<ID>' . $cat['categories_id'] . '</ID>' . "\n" .
-                     '<PARENT_ID>' . $cat['parent_id'] . '</PARENT_ID>' . "\n" .
-                     '<IMAGE_URL>' . htmlspecialchars($cat['categories_image']) . '</IMAGE_URL>' . "\n" .
-                     '<SORT_ORDER>' . $cat['sort_order'] . '</SORT_ORDER>' . "\n" .
-                     '<DATE_ADDED>' . $cat['date_added'] . '</DATE_ADDED>' . "\n" .
-                     '<LAST_MODIFIED>' . $cat['last_modified'] . '</LAST_MODIFIED>' . "\n";
+                while ($cat = $cat_result->fields) {
+                  $schema  = '<CATEGORIES_DATA>' . "\n" .
+                             '<ID>' . $cat['categories_id'] . '</ID>' . "\n" .
+                             '<PARENT_ID>' . $cat['parent_id'] . '</PARENT_ID>' . "\n" .
+                             '<IMAGE_URL>' . htmlspecialchars($cat['categories_image']) . '</IMAGE_URL>' . "\n" .
+                             '<SORT_ORDER>' . $cat['sort_order'] . '</SORT_ORDER>' . "\n" .
+                             '<DATE_ADDED>' . $cat['date_added'] . '</DATE_ADDED>' . "\n" .
+                             '<LAST_MODIFIED>' . $cat['last_modified'] . '</LAST_MODIFIED>' . "\n";
 
-
-                 $detail_query = "SELECT cd.categories_id, cd.language_id, cd.categories_name, l.code as lang_code, l.name as lang_name
-                                FROM " . $oosDBTable['categories_description'] . " cd,
-                                     " . $oosDBTable['languages'] . " l
-                                WHERE cd.categories_id=" . $cat['categories_id'] . " 
-                                AND l.languages_id = cd.language_id";
-                 $detail_result = $db->Execute($detail_query);
+                  $detail_query = "SELECT cd.categories_id, cd.categories_language, cd.categories_name, 
+                                          cd.categories_heading_title, cd.categories_description, 
+                                          cd.categories_description_meta, categories_keywords_meta,
+                                          l.languages_id, l.name as lang_name
+                                   FROM " . $oosDBTable['categories_description'] . " cd,
+                                        " . $oosDBTable['languages'] . " l
+                                   WHERE cd.categories_id=" . $cat['categories_id'] . " 
+                                     AND l.iso_639_2 = cd.categories_language";
+                  $detail_result = $db->Execute($detail_query);
                  
-                 while ($details = $detail_result->fields) {
-                   $schema .= "<CATEGORIES_DESCRIPTION ID='" . $details["language_id"] ."' CODE='" . $details["lang_code"] . "' NAME='" . $details["lang_name"] . "'>\n";
-                   $schema .= "<NAME>" . htmlspecialchars($details["categories_name"]) . "</NAME>" . "\n";
-                   $schema .= "<HEADING_TITLE>" . htmlspecialchars($details["categories_heading_title"]) . "</HEADING_TITLE>" . "\n";
-                   $schema .= "<DESCRIPTION>" . htmlspecialchars($details["categories_description"]) . "</DESCRIPTION>" . "\n";
-                   $schema .= "<META_TITLE>" . htmlspecialchars($details["categories_meta_title"]) . "</META_TITLE>" . "\n";
-                   $schema .= "<META_DESCRIPTION>" . htmlspecialchars($details["categories_meta_description"]) . "</META_DESCRIPTION>" . "\n";
-                   $schema .= "<META_KEYWORDS>" . htmlspecialchars($details["categories_meta_keywords"]) . "</META_KEYWORDS>" . "\n";
-                   $schema .= "</CATEGORIES_DESCRIPTION>\n";
-                   $detail_result->MoveNext();
-                 }
-          
-                 // Produkte in dieser Categorie auflisten
-                 $prod2cat_query = "SELECT categories_id, products_id 
-                                    FROM " . $oosDBTable['products_to_categories'] . " 
-                                    WHERE categories_id = '" . $cat['categories_id'] . "'";
-                 $prod2cat_result = $db->Execute($prod2cat_query);
-                                       
-                 while ($prod2cat = $prod2cat_result->fields) {
-                   $schema .="<PRODUCTS ID='" . $prod2cat["products_id"] ."'></PRODUCTS>" . "\n";
-                   $prod2cat_result->MoveNext();
-                 }
-          
-                 $schema .= '</CATEGORIES_DATA>' . "\n";
-                 echo $schema;
-                 $cat_result->MoveNext();
-               }
-               $schema = '</CATEGORIES>' . "\n";
+                  while ($details = $detail_result->fields) {
+                    $schema .= "<CATEGORIES_DESCRIPTION ID='" . $details["languages_id"] ."' CODE='" . $details["categories_language"] . "' NAME='" . $details["lang_name"] . "'>\n";
+                    $schema .= "<NAME>" . htmlspecialchars($details["categories_name"]) . "</NAME>" . "\n";
+                    $schema .= "<HEADING_TITLE>" . htmlspecialchars($details["categories_heading_title"]) . "</HEADING_TITLE>" . "\n";
+                    $schema .= "<DESCRIPTION>" . htmlspecialchars($details["categories_description"]) . "</DESCRIPTION>" . "\n";
+                    $schema .= "<META_TITLE>" . htmlspecialchars($details["categories_meta_title"]) . "</META_TITLE>" . "\n";
+                    $schema .= "<META_DESCRIPTION>" . htmlspecialchars($details["categories_description_meta"]) . "</META_DESCRIPTION>" . "\n";
+                    $schema .= "<META_KEYWORDS>" . htmlspecialchars($details["categories_keywords_meta"]) . "</META_KEYWORDS>" . "\n";
+                    $schema .= "</CATEGORIES_DESCRIPTION>\n";
+
+                    $detail_result->MoveNext();
+                  }
+         
+                  // Produkte in dieser Categorie auflisten
+                  $prod2cat_query = "SELECT categories_id, products_id 
+                                     FROM " . $oosDBTable['products_to_categories'] . " 
+                                     WHERE categories_id = '" . $cat['categories_id'] . "'";
+                  $prod2cat_result = $db->Execute($prod2cat_query);
+                                        
+                  while ($prod2cat = $prod2cat_result->fields) {
+                    $schema .="<PRODUCTS ID='" . $prod2cat["products_id"] ."'></PRODUCTS>" . "\n";
+
+                    $prod2cat_result->MoveNext();
+                  }
+           
+                  $schema .= '</CATEGORIES_DATA>' . "\n";
+                  echo $schema;
+
+                  $cat_result->MoveNext();
+                }
+                $schema = '</CATEGORIES>' . "\n";
         
-               echo $schema;
-               exit;
+                echo $schema;
+                exit;
+
 //-----------------------------------------------------------------------------         
              case 'manufacturers_export':
 //----------------------------------------------------------------------------- 
@@ -370,7 +372,7 @@ if (substr($password,0,2)=='%%') {
         
                $orders_result = $db->Execute($orders_query);
         
-               while ($orders = tep_db_fetch_array($orders_result)) {
+               while ($orders = $orders_result->fields) {
           
                  // Geburtsdatum laden
                  $cust_query = "SELECT customers_dob, customers_gender
@@ -379,7 +381,7 @@ if (substr($password,0,2)=='%%') {
                  $cust_result = $db->Execute ($cust_query);
           
                  if (tep_db_num_rows($cust_result) >0) {
-                   $cust_data = tep_db_fetch_array($cust_result);
+                   $cust_data = $cust_result->fields;
                    $cust_dob = $cust_data['customers_dob'];
                    $cust_gender = $cust_data['customers_gender'];
                  } else {
@@ -406,8 +408,8 @@ if (substr($password,0,2)=='%%') {
                      '<SUBURB>' . htmlspecialchars($orders['billing_suburb']) . '</SUBURB>' . "\n" .
                      '<STATE>' . htmlspecialchars($orders['billing_state']) . '</STATE>' . "\n" .
                      '<COUNTRY>' . htmlspecialchars($orders['billing_country_iso_code_2']) . '</COUNTRY>' . "\n" .
-                     '<TELEPHONE>' . htmlspecialchars($orders['customers_telephone']) . '</TELEPHONE>' . "\n" . // JAN
-                     '<EMAIL>' . htmlspecialchars($orders['customers_email_address']) . '</EMAIL>' . "\n" . // JAN
+                     '<TELEPHONE>' . htmlspecialchars($orders['customers_telephone']) . '</TELEPHONE>' . "\n" .
+                     '<EMAIL>' . htmlspecialchars($orders['customers_email_address']) . '</EMAIL>' . "\n" .
                      '<BIRTHDAY>' . htmlspecialchars($cust_dob) . '</BIRTHDAY>' . "\n" .
                      '<GENDER>' . htmlspecialchars($cust_gender) . '</GENDER>' . "\n" .
                      '</BILLING_ADDRESS>' . "\n" .
@@ -442,7 +444,7 @@ if (substr($password,0,2)=='%%') {
                 WHERE orders_id = " . $orders['orders_id'];
                   
               $bank_result = $db->Execute($bank_query);
-              if (($bank_result) && ($bankdata = tep_db_fetch_array($bank_result))) {
+              if ($bankdata = $bank_result->fields) {
                 $bank_name = $bankdata['banktransfer_bankname'];
                 $bank_blz  = $bankdata['banktransfer_blz'];
                 $bank_kto  = $bankdata['banktransfer_number'];
@@ -508,13 +510,13 @@ if (substr($password,0,2)=='%%') {
             
             if (tep_db_num_rows( $attributes_result ) > 0) 
             {
-              while ($attributes = tep_db_fetch_array($attributes_result)) 
-              {
+              while ($attributes = $attributes_result->fields) {
                 $schema .= '<OPTION>' . "\n" .
                            '<PRODUCTS_OPTIONS>' .  htmlspecialchars($attributes['products_options']) . '</PRODUCTS_OPTIONS>' . "\n" . 
                            '<PRODUCTS_OPTIONS_VALUES>' .  htmlspecialchars($attributes['products_options_values']) . '</PRODUCTS_OPTIONS_VALUES>' . "\n" .
                            '<PRODUCTS_OPTIONS_PRICE>' .  $attributes['price_prefix'] . ' ' . $attributes['options_values_price'] . '</PRODUCTS_OPTIONS_PRICE>' . "\n" .
                            '</OPTION>' . "\n";
+                $attributes_result->MoveNext();
               }
             }            
             $schema .=  '</PRODUCT>' . "\n";
@@ -539,7 +541,7 @@ if (substr($password,0,2)=='%%') {
               
           $totals_result = $db->Execute($totals_query);
           
-          while ($totals = tep_db_fetch_array($totals_result)) {
+          while ($totals = $totals_result->fields) {
           
             $total_prefix = "";
             $total_tax  = "";
@@ -554,6 +556,7 @@ if (substr($password,0,2)=='%%') {
                        '<TOTAL_PREFIX>' . htmlspecialchars($total_prefix) . '</TOTAL_PREFIX>' . "\n" .
                        '<TOTAL_TAX>' . htmlspecialchars($total_tax) . '</TOTAL_TAX>' . "\n" . 
                        '</TOTAL>' . "\n";
+            $totals_result->MoveNext();            
           }
           
           $schema .= '</ORDER_TOTAL>' . "\n";
@@ -569,8 +572,9 @@ if (substr($password,0,2)=='%%') {
               
           $comments_result = $db->Execute ($comments_query);
           
-          if ($comments =  tep_db_fetch_array($comments_result)) {
+          if ($comments = $comments_result->fields) {
             $schema .=  '<ORDER_COMMENTS>' . htmlspecialchars($comments['comments']) . '</ORDER_COMMENTS>' . "\n";
+            $comments_result->MoveNext();
           }
           
           $schema .= '</ORDER_INFO>' . "\n\n";
@@ -607,7 +611,7 @@ if (substr($password,0,2)=='%%') {
                }
                   
                $orders_query = $db->Execute($sql);
-               while ($products = tep_db_fetch_array($orders_query)) {
+               while ($products = $orders_query->fields) {
         
           $schema  = '<PRODUCT_INFO>' . "\n" .
                      '<PRODUCT_DATA>' . "\n" .
@@ -649,7 +653,7 @@ if (substr($password,0,2)=='%%') {
           
           $detail_result = $db->Execute($detail_query);
 
-                 while ($details = tep_db_fetch_array($detail_result)) {
+                 while ($details = $detail_result->fields) {
           
                    $schema .= "<PRODUCT_DESCRIPTION ID='" . $details["language_id"] ."' CODE='" . $details["language_code"] . "' NAME='" . $details["language_name"] . "'>\n";
                        
@@ -728,7 +732,7 @@ if (substr($password,0,2)=='%%') {
     
                $address_result = $db->Execute($address_query);
 
-               while ($address = xtc_db_fetch_array($address_result))  {
+               while ($address = $address_result->fields) {
       
                  $schema = '<CUSTOMERS_DATA>' . "\n" .
                            '<CUSTOMERS_ID>' . htmlspecialchars($address['customers_id']) . '</CUSTOMERS_ID>' . "\n" .
@@ -742,13 +746,14 @@ if (substr($password,0,2)=='%%') {
                            '<SUBURB>' . htmlspecialchars($address['entry_suburb']) . '</SUBURB>' . "\n" .
                            '<STATE>' . htmlspecialchars($address['entry_state']) . '</STATE>' . "\n" .
                            '<COUNTRY>' . htmlspecialchars($address['countries_iso_code_2']) . '</COUNTRY>' . "\n" .
-                           '<TELEPHONE>' . htmlspecialchars($address['customers_telephone']) . '</TELEPHONE>' . "\n" . // JAN
-                           '<FAX>' . htmlspecialchars($address['customers_fax']) . '</FAX>' . "\n" . // JAN
-                           '<EMAIL>' . htmlspecialchars($address['customers_email_address']) . '</EMAIL>' . "\n" . // JAN
+                           '<TELEPHONE>' . htmlspecialchars($address['customers_telephone']) . '</TELEPHONE>' . "\n" .
+                           '<FAX>' . htmlspecialchars($address['customers_fax']) . '</FAX>' . "\n" .
+                           '<EMAIL>' . htmlspecialchars($address['customers_email_address']) . '</EMAIL>' . "\n" .
                            '<BIRTHDAY>' . htmlspecialchars($address['customers_dob']) . '</BIRTHDAY>' . "\n" .
                            '<DATE_ACCOUNT_CREATED>' . htmlspecialchars($address['customers_info_date_account_created']) . '</DATE_ACCOUNT_CREATED>' . "\n" .
                            '</CUSTOMERS_DATA>' . "\n";
                  echo $schema;
+                 $address_result->MoveNext();
                }
     
                $schema = '</CUSTOMERS>' . "\n\n";
@@ -766,8 +771,7 @@ if (substr($password,0,2)=='%%') {
               $from = oosDBPrepareInput($_GET['customers_from']);
               $anz  = oosDBPrepareInput($_GET['customers_count']);
     
-              $address_query = "
-              SELECT customers_id, customers_gender, customers_firstname, customers_lastname, customers_email_address
+              $address_query = "SELECT customers_id, customers_gender, customers_firstname, customers_lastname, customers_email_address
                                 FROM " . $oosDBTable['customers']. " 
                                 WHERE customers_newsletter = 1";
 
@@ -817,16 +821,16 @@ if (substr($password,0,2)=='%%') {
              header ("Pragma: no-cache"); // HTTP/1.0
              header ("Content-type: text/xml");
 
-             if ($_GET['error'] =='') $_GET['error']='NO PASSWORD OR USERNAME';
-             if ($_GET['code'] =='') $_GET['code']='100';
+             $error = (isset($_GET['error']) ? $_GET['code'] : 'NO PASSWORD OR USERNAME');
+             $code = (isset($_GET['code']) ? $_GET['code'] : '100');
 
              $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-                       '<STATUS>
-                        <STATUS_DATA>
-                        <CODE>'.$_GET['code'].'</CODE>
-                       <MESSAGE>'.$_GET['error'].'</MESSAGE>
-                       </STATUS_DATA>
-                       </STATUS>';
+                       '<STATUS>' . "\n" .
+                       '<STATUS_DATA>' . "\n" .
+                       '<CODE>' . $code . '</CODE>' . "\n" .
+                       '<MESSAGE>' . $error . '</MESSAGE>' . "\n" .
+                       '</STATUS_DATA>' . "\n" .
+                       '</STATUS>';
 
              echo $schema;
 
