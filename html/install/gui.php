@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: gui.php,v 1.1 2005/01/07 09:29:28 r23 Exp $
+   $Id: gui.php,v 1.2 2005/01/10 10:41:16 r23 Exp $
    ----------------------------------------------------------------------
    Based on:
    
@@ -36,29 +36,28 @@
     return trim(stripslashes($string));
   }
 
-  function oosGetLocalPath($path) {
-   if (substr($path, -1) == '/') $path = substr($path, 0, -1);
 
-   return $path;
-  }
+ 
 
+/**
+ * This function prints the <input type=hidden> area 
+ */
+function print_FormHidden() {
+   global $update;
 
-function print_CHMcheck() {
-   global $currentlang;
+   reset($_POST);
+   while (list($key, $value) = each($_POST)) {
+     if (!is_array($_POST[$key])) {
+       echo '<input type="hidden" name="'. $key . '" value="' . htmlspecialchars(stripslashes($value)) . '">' . "\n";
+     }
+   }
 
-   echo '<font class="oos-title">' . DBINFO . ':&nbsp;</font><br />' . "\n" .
-        '<font class="oos-normal">' . CHM_CHECK_1 . '</font><br /><br />' . "\n" .
-        '<form action="index.php" method="post"><center>' . "\n";
-   print_FormEditabletext(0);
-   echo '<input type="hidden" name="currentlang" value="' . $currentlang .'">' . "\n" .
-        '<input type="hidden" name="op" value="Submit"><br /><br />' . "\n" .
-        '<input type="submit" value="' . BTN_SUBMIT . '"></center></form>' . "\n";
-
-}  
+}
 
 function print_Next() {
    global $update;
-
+   
+   echo '<br /><br /><br /><br /><br /><br />';
    echo '<form action="index.php" method="post"><center><table width="50%">' . "\n";
    echo '<tr><td align=center><input type="hidden" name="op" value="Finish">' . "\n" .
         '<input type="submit" value="' . BTN_FINISH . '"></td></tr></table></center></form>' . "\n";             
@@ -86,63 +85,186 @@ function print_oosFinish() {
 }
 
 
-function oosSuccess() {
-   echo '<font class="oos-title">' . SUCCESS_1 . '</font>' . "\n" .
-         '<font class="oos-normal">' . SUCCESS_2 . '<br /><br />' . "\n" .
-         '<form action="index.php" method="post"><center><table width="50%">' . "\n";
-   print_FormHidden();
-   echo '<tr><td align=center><input type="hidden" name="op" value="Finish">' . "\n" .
-        '<input type="submit" value="' . BTN_FINISH . '"></td>' . "\n" .
-        '</tr></table></center></form></font><br /><br />' . "\n";
-}
+function print_Admin() {
+   global $currentlang;
 
-
-
-function print_Submit() {
-  echo '<font class="oos-title">' . DBINFO . ':&nbsp;</font>' .
-       '<font class="oos-normal">' . SUBMIT_1 . '</font><br /><br />' . "\n" .
-       '<br /><center><font class="oos-normal">' . SUBMIT_2 . '</font><br /><br />';               
-  print_FormText();
-  echo '<form name="change info" action="index.php" method="post">' . "\n";
-  print_FormHidden();
-       '<br />' . "\n" .
-       '<font class="oos-normal">' . SUBMIT_3 . '</font></center><br /><br />' . "\n" .
-       '<table width="50%" align="center">' . "\n" .
-       ' <tr>' . "\n" .
-       '  <td>' . "\n";
-  echo '<form name="new install" action="index.php" method="post">' . "\n";
-  print_FormHidden();
-  echo '<input type="hidden" name="op" value="Change_Info">' . "\n" .
-       '<input type="submit" value="' . BTN_CHANGE_INFO . '">' . "\n" .
-       '</form>' . "\n" .
-       '  </td>' . "\n" .
-       '  <td>' . "\n";
-  echo '<form name="update" action="index.php" method="post">' . "\n";
-  print_FormHidden();
-  echo '<input type="hidden" name="op" value="Upgrade">' . "\n" .
-       '<input type="submit" value="' . BTN_UPGARDE . '">' . "\n" .
-       '</form></td>' . "\n" .
-       ' </tr>' . "\n" .
-       '</table></form>' . "\n";
-
-}
-
-
-
-
-function print_Start() {
-   echo '<form action="index.php" method="post"><table class="content">' . "\n" .
+   echo '<font class="oos-title">' . CONTINUE_1 . ':&nbsp;</font>' . "\n" .
+        '<font class="oos-normal">' . CONTINUE_2 . '</font>' . "\n" .
+        '<br /><br />' . "\n" .
+        '<center><form action="index.php" method="post"><table class="content">' . "\n" .
         ' <tr>' . "\n" .
-        '   <td align=center>' . "\n";
+        '  <td align="left"><font class="oos-normal">' . ADMIN_GENDER . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal"><input type="radio" name="gender" value="m" checked>&nbsp;' . MALE . '&nbsp;&nbsp;<input type="radio" name="gender" value="f">&nbsp;' . FEMALE . '&nbsp;</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_FIRSTNAME . '</font></td>' . "\n" .
+        '  <td><input type="text" name="firstname" SIZE=30 maxlength=80 value=""></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_NAME . '</font></td>' . "\n" .
+        '  <td><input type="text" name="name" SIZE=30 maxlength=80 value="Admin"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_PASS . '</font></td>' . "\n" .
+        '  <td><input type="password" name="pwd" SIZE=30 maxlength=80 value=""></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_REPEATPASS . '</font></td>' . "\n" .
+        '  <td><input type="password" name="repeatpwd" SIZE=30 maxlength=80 value=""></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_EMAIL . '</font></td>' . "\n" .
+        '  <td><input type="text" name="email" SIZE=30 maxlength=80 value="none@myoos.de"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_PHONE . '</font></td>' . "\n" .
+        '  <td><input type="text" name="phone" SIZE=30 maxlength=80 value=""></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_FAX . '</font></td>' . "\n" .
+        '  <td><input type="text" name="fax" SIZE=30 maxlength=80 value=""></td>' . "\n" .
+        ' </tr>' . "\n" .
+        '</table>' . "\n" .
+        '<br /><br />' . "\n";
    print_FormHidden();
-   echo '<input type="hidden" name="op" value="Confirm">' . "\n" .
-         '<input type="submit" value="' . BTN_CONTINUE . '"></td>' . "\n" .
-         ' </tr>' . "\n" .
-         '</table></form>' . "\n";
-           
+   echo '<input type="hidden" name="op" value="Login">' . "\n" .
+        '<input type="submit" value="' . BTN_CONTINUE . '">' . "\n" .
+        '</form></center>' . "\n";
+
 }
 
 
+function print_ChangeLogin() {
+   global $currentlang, $gender, $firstname, $name, $pwd, $repeatpwd, $email, $phone, $fax; 
+
+   echo '<font class="oos-title">' . CONTINUE_1 . '</font>' . "\n";
+
+   if ($pwd == '') {
+     echo '<br /><font class="oos-error">' . ADMIN_ERROR . '&nbsp;' . ADMIN_PASSWORD_ERROR . '</font>' . "\n";
+   } 
+   if ($email == '') {
+     echo '<br /><font class="oos-error">' . ADMIN_ERROR . '&nbsp;' . ADMIN_EMAIL_ERROR. '</font>' . "\n";
+   }
+   if ($pwd != $repeatpwd) {
+     echo '<br /><font class="oos-error">' . ADMIN_ERROR . '&nbsp;' . PASSWORD_ERROR . '</font>' . "\n";
+   } 
+   if ($gender == 'm') {
+     $oos_radio_gender = '<input type="radio" name="gender" value="m" checked>&nbsp;' . MALE . '&nbsp;&nbsp;<input type="radio" name="gender" value="f">&nbsp;' . FEMALE . '&nbsp';
+   } else {
+     $oos_radio_gender = '<input type="radio" name="gender" value="m">&nbsp;' . MALE . '&nbsp;&nbsp;<input type="radio" name="gender" value="f" checked>&nbsp;' . FEMALE . '&nbsp';
+   }
+   echo '<br /><br />' . "\n" .
+        '<center><form action="index.php" method="post"><table class="content">' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_GENDER . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $oos_radio_gender . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_FIRSTNAME . '</font></td>' . "\n" .
+        '  <td><input type="text" name="firstname" SIZE=30 maxlength=80 value="' . $firstname . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_NAME . '</font></td>' . "\n" .
+        '  <td><input type="text" name="name" SIZE=30 maxlength=80 value="' . $name . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_PASS . '</font></td>' . "\n" .
+        '  <td><input type="password" name="pwd" SIZE=30 maxlength=80 value="' . $pwd . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_REPEATPASS . '</font></td>' . "\n" .
+        '  <td><input type="password" name="repeatpwd" SIZE=30 maxlength=80 value="' . $repeatpwd . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_EMAIL . '</font></td>' . "\n" .
+        '  <td><input type="text" name="email" SIZE=30 maxlength=80 value="' . $email . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_PHONE . '</font></td>' . "\n" .
+        '  <td><input type="text" name="phone" SIZE=30 maxlength=80 value="' . $phone . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_FAX . '</font></td>' . "\n" .
+        '  <td><input type="text" name="fax" SIZE=30 maxlength=80 value="' . $fax . '"></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left">&nbsp;</td>' . "\n" .
+        '  <td>&nbsp;</td>' . "\n" .
+        ' </tr>' . "\n" .
+        '</table>' . "\n";
+   echo '<input type="hidden" name="op" value="Login">' . "\n" .
+        '<input type="submit" value="' . BTN_SET_LOGIN . '">' . "\n" .
+        '</form></center>' . "\n";
+
+}
+
+function print_Login() {
+   global $currentlang, $gender, $firstname, $name, $pwd, $repeatpwd, $email, $phone, $fax; 
+
+   $oos_gender = ($gender == 'm') ? MALE : FEMALE;
+
+   echo '<font class="oos-title">' . CONTINUE_1 . ':&nbsp;</font>' . "\n" .
+        '<font class="oos-normal">' . CONTINUE_3 . '</font>' . "\n" .
+        '<br /><br />' . "\n" .
+        '<center><form name="change login" action="index.php" method="post"><table class="content">' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_GENDER . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $oos_gender . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_FIRSTNAME . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $firstname . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_NAME . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $name . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_PASS . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . PASSWORD_HIDDEN . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_REPEATPASS . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . PASSWORD_HIDDEN . '</td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_EMAIL . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $email . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_PHONE . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $phone . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left"><font class="oos-normal">' . ADMIN_FAX . '</font></td>' . "\n" .
+        '  <td><font class="oos-normal">' . $fax . '</font></td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="left">&nbsp;</td>' . "\n" .
+        '  <td>&nbsp;</td>' . "\n" .
+        ' </tr>' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td>&nbsp;</td>' . "\n" .
+        '  <td>' . "\n";
+   print_FormHidden();
+   echo '<input type="hidden" name="op" value="Change Login">' . "\n" . 
+        '<input type="submit" value="' . BTN_CHANGE_INFO . '"><br />' . "\n" .
+        '  </td>' . "\n" .
+        ' </tr>' . "\n" .
+        '</table></form>' . "\n" .
+        '<font class="oos-normal">' . ADMIN_INSTALL . '</font>' . "\n" .
+        '<form name="login install" action="index.php" method="post"><table width="80%" border="0" align="right">' . "\n" .
+        ' <tr>' . "\n" .
+        '  <td align="right">' . "\n";
+   print_FormHidden();
+   echo '<input type="hidden" name="op" value="CAO-Install">' . "\n" .
+        '<input type="submit" value="' . BTN_LOGIN_SUBMIT . '">' . "\n" .
+        ' </td>' . "\n" .
+        ' </tr>' . "\n" .
+        '</table>' . "\n" .
+        '</form></center>' . "\n";
+
+}
 
 
 function print_oosDefault() {

@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: xml_export.php,v 1.4 2005/01/09 09:28:25 r23 Exp $
+   $Id: xml_export.php,v 1.5 2005/01/10 10:41:16 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -119,9 +119,6 @@
   // Default-Sprache
   $iso_639_2 = 'deu';
 
-
-
-
 // check permissions for XML-Access
 
 $user = $_GET['user'];
@@ -149,7 +146,11 @@ if (substr($password,0,2)=='%%') {
        $gdata .= addslashes($key)." => ".addslashes($value)."\\r\\n";
     } 
 
-    $sql =("INSERT INTO cao_log
+    $today = date("Y-m-d H:i:s");
+    $method = oosServerGetVar('REQUEST_METHOD');
+    $action = (isset($_POST['action']) ? $_POST['action'] : '');
+    
+    $sql = "INSERT INTO " . $oosDBTable['cao_log'] . "
             (date,
              user,
              pw,
@@ -157,16 +158,32 @@ if (substr($password,0,2)=='%%') {
              action,
              post_data,
              get_data) 
-             VALUES (NOW(),
-                     '".$user."',
-                     '".$password."',
-                     '".$REQUEST_METHOD."',
-                     '".$_POST['action']."',
-                     '".$pdata."',
-                     '".$gdata."')");
+             VALUES (" . $db->DBTimeStamp($today) . ','
+                       . $db->qstr($user) . ','
+                       . $db->qstr($password) . ','
+                       . $db->qstr($method) . ','
+                       . $db->qstr($action) . ','
+                       . $db->qstr($pdata) . ','
+                       . $db->qstr($gdata) . ")";
     $result = $db->Execute($sql);
     if ($result === false) {
-      echo '<br />' .  $db->ErrorMsg();
+
+      header ("Last-Modified: ". gmdate ("D, d M Y H:i:s"). " GMT");  // immer geändert
+      header ("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+      header ("Pragma: no-cache"); // HTTP/1.0
+      header ("Content-type: text/xml");
+
+      $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
+                '<STATUS>' . "\n" .
+                '<STATUS_DATA>' . "\n" .
+                '<CODE>105</CODE>' . "\n" .
+                '<MESSAGE>'. $db->ErrorMsg() .'</MESSAGE>' . "\n" .
+                '<MESSAGE>WRONG PASSWORD</MESSAGE>' . "\n" .
+                '</STATUS_DATA>' . "\n" .
+                '</STATUS>' . "\n\n";
+      
+      echo $schema;
+
     } 
   }
 
@@ -183,7 +200,7 @@ if (substr($password,0,2)=='%%') {
                                         FROM " . $oosDBTable['admin'] . " 
                                         WHERE admin_email_address = '" . oosDBInput($user) . "'");
     if (!$check_admin_result->RecordCount()) {
-      xtc_redirect('xml_export.php?error=WRONG LOGIN&code=101');
+      oosRedirect(OOS_HTTP_SERVER . OOS_ADMIN . $oosFilename['xml_export'] . '?error=WRONG+LOGIN&code=101');
     } else {
       $check_admin = $check_admin_result->fields;
       
@@ -191,17 +208,16 @@ if (substr($password,0,2)=='%%') {
         $password = md5(substr($password,2,40));
       }
       if ($password != $check_admin['login_password']) {
-        xtc_redirect('xml_export.php?error=WRONG PASSWORD&code=102');
+        oosRedirect(OOS_HTTP_SERVER . OOS_ADMIN . $oosFilename['xml_export'] . '?error=WRONG+LOGIN&code=101');
       } else {
         $filename = split('\?', basename($_SERVER['PHP_SELF'])); 
         $filename = $filename[0];
-        $page_key = $filename;
-        # $page_key = array_search($filename, $oosFilename);
+        $page_key = array_search($filename, $oosFilename);
         $login_groups_id = $check_admin[login_groups_id];
            
         $access_result = $db->Execute("SELECT admin_files_name FROM " . $oosDBTable['admin_files'] . " WHERE FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) AND admin_files_name = '" . $page_key . "'");
         if (!$access_result->RecordCount()) {
-          xtc_redirect('xml_export.php?error=WRONG LOGIN&code=101');
+          oosRedirect(OOS_HTTP_SERVER . OOS_ADMIN . $oosFilename['xml_export'] . '?error=WRONG+LOGIN&code=101');
         } else {
 
           $db->Execute("UPDATE " . $oosDBTable['admin'] . " 
@@ -745,16 +761,16 @@ if (substr($password,0,2)=='%%') {
               oosSetTimeLimit(0);
 
               $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-              '<CUSTOMERS>' . "\n".
+                        '<CUSTOMERS>' . "\n".
 
               $from = oosDBPrepareInput($_GET['customers_from']);
               $anz  = oosDBPrepareInput($_GET['customers_count']);
     
               $address_query = "
               SELECT customers_id, customers_gender, customers_firstname, customers_lastname, customers_email_address
-              FROM " . $oosDBTable['customers']. " 
-              WHERE customers_newsletter = 1";
-        
+                                FROM " . $oosDBTable['customers']. " 
+                                WHERE customers_newsletter = 1";
+
               if (isset($from)) {
                 if (!isset($anz)) {
                   $anz = 1000;

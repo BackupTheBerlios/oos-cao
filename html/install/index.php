@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: index.php,v 1.1 2005/01/07 09:29:28 r23 Exp $
+   $Id: index.php,v 1.2 2005/01/10 10:41:16 r23 Exp $
    ----------------------------------------------------------------------
    Based on:
    
@@ -59,6 +59,7 @@
   include_once 'db.php';
   include_once 'check.php'; 
   include_once 'lang/deu/global.php';
+  include_once 'newinstall.php';
 
   if (isset($_POST)) {
     foreach ($_POST as $k=>$v) {
@@ -92,12 +93,28 @@
       print_oosFinish();
       break;     
    
-    case "CAO-Install":      
+    case 'CAO-Install':
       oosDBInit($dbhost, $dbuname, $dbpass, $dbname, $dbtype);
-    #  oosDoUpgrade131($dbhost, $dbuname, $dbpass, $dbname, $prefix_table, $dbtype);
+      oosInputData($gender, $firstname, $name, $pwd, $repeatpwd, $email, $phone, $fax, $prefix_table, $update);    
       print_Next();
-    break;
-
+      break;
+      
+    case 'Change Login':
+      print_ChangeLogin();
+      break;
+      
+    case 'Login':
+      if ( ($pwd == '') || ($email == '') || ($pwd != $repeatpwd) ) {
+        print_ChangeLogin();
+      } else {     
+        print_Login();
+      }
+      break;
+   
+    case 'Admin':
+       print_Admin();
+       break;
+   
     case 'PHP_Check':
       if ($_POST['agreecheck'] == false) {
         print_oosDefault();

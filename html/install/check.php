@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: check.php,v 1.1 2005/01/07 09:29:28 r23 Exp $
+   $Id: check.php,v 1.2 2005/01/10 10:41:16 r23 Exp $
    ----------------------------------------------------------------------
    Based on:
    
@@ -248,7 +248,7 @@ function oosCheckPHP() {
      echo '<font class="oos-normal">' . PHP_CHECK_OK . '</font><br />';
      echo '<p><form action="index.php" method="post">';
      echo '<input type="hidden" name="currentlang" value="' . $currentlang . '">';
-     echo '<input type="hidden" name="op" value="CAO-Install">';
+     echo '<input type="hidden" name="op" value="Admin">';
      echo '<center><input type="submit" value="' . BTN_CONTINUE . '"></center></form></p>';
    } else {
      echo '<p><form action="index.php" method="post">';

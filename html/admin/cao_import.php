@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_import.php,v 1.7 2005/01/09 09:28:25 r23 Exp $
+   $Id: cao_import.php,v 1.8 2005/01/10 10:41:16 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -128,7 +128,11 @@
        $gdata .= addslashes($key)." => ".addslashes($value)."\\r\\n";
     } 
 
-    $sql =("INSERT INTO cao_log
+    $today = date("Y-m-d H:i:s");
+    $method = oosServerGetVar('REQUEST_METHOD');
+    $action = (isset($_POST['action']) ? $_POST['action'] : '');
+    
+    $sql = "INSERT INTO " . $oosDBTable['cao_log'] . "
             (date,
              user,
              pw,
@@ -136,16 +140,32 @@
              action,
              post_data,
              get_data) 
-             VALUES (NOW(),
-                     '".$user."',
-                     '".$password."',
-                     '".$REQUEST_METHOD."',
-                     '".$_POST['action']."',
-                     '".$pdata."',
-                     '".$gdata."')");
+             VALUES (" . $db->DBTimeStamp($today) . ','
+                       . $db->qstr($user) . ','
+                       . $db->qstr($password) . ','
+                       . $db->qstr($method) . ','
+                       . $db->qstr($action) . ','
+                       . $db->qstr($pdata) . ','
+                       . $db->qstr($gdata) . ")";
     $result = $db->Execute($sql);
     if ($result === false) {
-      echo '<br />' .  $db->ErrorMsg();
+
+      header ("Last-Modified: ". gmdate ("D, d M Y H:i:s"). " GMT");  // immer geändert
+      header ("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+      header ("Pragma: no-cache"); // HTTP/1.0
+      header ("Content-type: text/xml");
+
+      $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
+                '<STATUS>' . "\n" .
+                '<STATUS_DATA>' . "\n" .
+                '<CODE>105</CODE>' . "\n" .
+                '<MESSAGE>'. $db->ErrorMsg() .'</MESSAGE>' . "\n" .
+                '<MESSAGE>WRONG PASSWORD</MESSAGE>' . "\n" .
+                '</STATUS_DATA>' . "\n" .
+                '</STATUS>' . "\n\n";
+      
+      echo $schema;
+
     } 
   }
 
@@ -207,8 +227,7 @@
       } else {
         $filename = split('\?', basename($_SERVER['PHP_SELF'])); 
         $filename = $filename[0];
-        $page_key = $filename;
-        # $page_key = array_search($filename, $oosFilename);
+        $page_key = array_search($filename, $oosFilename);
         $login_groups_id = $check_admin[login_groups_id];
      
         $access_result = $db->Execute("SELECT admin_files_name FROM " . $oosDBTable['admin_files'] . " WHERE FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) AND admin_files_name = '" . $page_key . "'");

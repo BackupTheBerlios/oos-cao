@@ -1,0 +1,64 @@
+
+=== osis online shop ===
+
+Basiert auf:
+osCommerce 2.2 Milestone 1 
+Copyright (c) osCommerce 2003
+
+osCommerce, Open Source E-Commerce Solutions
+Copyright (c) 2003 osCommerce
+
+http://www.oscommerce.com
+Released under GNU General Public License (GPL)
+
+
+
+ADODB Library for PHP4
+(c) 2000-2003 John Lim (jlim@natsoft.com.my)
+http://php.weblogs.com/ADOdb
+Released under both BSD and GNU Lesser GPL library license. 
+
+
+Smarty: the PHP compiling template engine
+copyright 2001-2003 ispi of Lincoln, Inc. All rights reserved.
+http://smarty.php.net/
+Released under GNU Lesser General Public License.
+
+
+rss Parser 
+Copyright (c) 2001-2003 Stefan Saasen <s@fase4.com>
+Maintainer and initial developer:
+Stefan Saasen <s@fase4.com> 
+Proxy and authentication methods added by:
+Marco Kraus <marco.kraus@siemens.com>     
+http://www.fase4.com/rdf/
+Released under Mozilla Public License http://www.mozilla.org/MPL/
+
+
+NuSOAP - Web Services Toolkit for PHP
+Copyright (c) 2002 NuSphere Corporation
+Dietrich Ayala
+dietrich@ganx4.com
+http://dietrich.ganx4.com/nusoap
+NuSphere Corporation
+http://www.nusphere.com
+Released under GNU Lesser General Public License.
+
+
+SPAW Editor PHP Edition
+SPAW PHP WYSIWYG editor control
+Developed: Alan Mendelevich, alan@solmetra.lt
+Copyright: Solmetra (c)2003 All rights reserved.
+http://www.solmetra.com
+Released under the GNU General Public License
+
+
+
+
+
+Diese Liste erhebt keinen Anspruch auf Vollständigkeit!
+Sollten Sie der Meinung sein, auf diese Liste zu gehören, 
+kontaktieren Sie uns unter credits@r23.de
+
+--------------------------------------------------
+
