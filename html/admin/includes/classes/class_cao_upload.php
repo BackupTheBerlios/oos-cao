@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: class_cao_upload.php,v 1.1 2005/01/05 11:58:47 r23 Exp $
+   $Id: class_cao_upload.php,v 1.2 2005/01/09 03:25:30 r23 Exp $
 
    Based on:
 
@@ -34,7 +34,7 @@
 *                                                                                          *
 *  ******* CAO-Faktura comes with ABSOLUTELY NO WARRANTY ***************                   *
 *                                                                                          *
-********************************************************************************************
+*******************************************************************************************/
 
   class cao_upload {
     var $file, $filename, $destination, $permissions, $extensions, $tmp_filename;
