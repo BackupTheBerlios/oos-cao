@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: xml_export.php,v 1.7 2005/01/10 11:07:51 r23 Exp $
+   $Id: xml_export.php,v 1.8 2005/01/11 18:32:06 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -85,7 +85,7 @@
 
   require('includes/cao_api.php');
 
-  if (oosServerGetVar('HTTP_USER_AGENT') != 'CAO-Faktura') exit;
+  #if (oosServerGetVar('HTTP_USER_AGENT') != 'CAO-Faktura') exit;
   
   $version_nr    = '1.37';
   $version_datum = '2004.12.10';
@@ -361,13 +361,9 @@
         
                echo $schema;
         
-               $orders_query = "
-          SELECT
-            *
-          FROM 
-            " . $oosDBTable['orders'] . "
-          WHERE
-            orders_id >= '" . oosDBInput($order_from) . "'";
+               $orders_query = "SELECT *
+                                FROM " . $oosDBTable['orders'] . "
+                                WHERE orders_id >= '" . oosDBInput($order_from) . "'";
             
                if (!isset($order_status) && !isset($order_from)) {
                  $order_status = 1;
@@ -382,214 +378,183 @@
                  $cust_query = "SELECT customers_dob, customers_gender
                                 FROM " . $oosDBTable['customers'] . "
                                 WHERE customers_id=" . $orders['customers_id'];
-                 $cust_result = $db->Execute ($cust_query);
+                 $cust_result = $db->Execute($cust_query);
           
-                 if (tep_db_num_rows($cust_result) >0) {
+                 if (!$cust_result->RecordCount()) { 
+                   $cust_dob = '';
+                   $cust_gender = '';
+                 } else {
                    $cust_data = $cust_result->fields;
                    $cust_dob = $cust_data['customers_dob'];
                    $cust_gender = $cust_data['customers_gender'];
-                 } else {
-                   $cust_dob = '';
-                   $cust_gender = '';
                  }
           
-          $schema  = '<ORDER_INFO>' . "\n" .
-                     '<ORDER_HEADER>' . "\n" .
-                     '<ORDER_ID>' . $orders['orders_id'] . '</ORDER_ID>' . "\n" .
-                     '<CUSTOMER_ID>' . $orders['customers_id'] . '</CUSTOMER_ID>' . "\n" .
-                     '<ORDER_DATE>' . $orders['date_purchased'] . '</ORDER_DATE>' . "\n" .
-                     '<ORDER_STATUS>' . $orders['orders_status'] . '</ORDER_STATUS>' . "\n" .
-                     '<ORDER_CURRENCY>' . htmlspecialchars($orders['currency']) . '</ORDER_CURRENCY>' . "\n" .
-                     '<ORDER_CURRENCY_VALUE>' . $orders['currency_value'] . '</ORDER_CURRENCY_VALUE>' . "\n" .
-                     '</ORDER_HEADER>' . "\n" .
-                     '<BILLING_ADDRESS>' . "\n" .
-                     '<COMPANY>' . htmlspecialchars($orders['billing_company']) . '</COMPANY>' . "\n" .
-                     '<FIRSTNAME>' . htmlspecialchars($orders['billing_firstname']) . '</FIRSTNAME>' . "\n" .
-                     '<LASTNAME>' . htmlspecialchars($orders['billing_lastname']) . '</LASTNAME>' . "\n" .
-                     '<STREET>' . htmlspecialchars($orders['billing_street_address']) . '</STREET>' . "\n" .
-                     '<POSTCODE>' . htmlspecialchars($orders['billing_postcode']) . '</POSTCODE>' . "\n" .
-                     '<CITY>' . htmlspecialchars($orders['billing_city']) . '</CITY>' . "\n" .
-                     '<SUBURB>' . htmlspecialchars($orders['billing_suburb']) . '</SUBURB>' . "\n" .
-                     '<STATE>' . htmlspecialchars($orders['billing_state']) . '</STATE>' . "\n" .
-                     '<COUNTRY>' . htmlspecialchars($orders['billing_country_iso_code_2']) . '</COUNTRY>' . "\n" .
-                     '<TELEPHONE>' . htmlspecialchars($orders['customers_telephone']) . '</TELEPHONE>' . "\n" .
-                     '<EMAIL>' . htmlspecialchars($orders['customers_email_address']) . '</EMAIL>' . "\n" .
-                     '<BIRTHDAY>' . htmlspecialchars($cust_dob) . '</BIRTHDAY>' . "\n" .
-                     '<GENDER>' . htmlspecialchars($cust_gender) . '</GENDER>' . "\n" .
-                     '</BILLING_ADDRESS>' . "\n" .
-                     '<DELIVERY_ADDRESS>' . "\n" .
-                     '<COMPANY>' . htmlspecialchars($orders['delivery_company']) . '</COMPANY>' . "\n" .
-                     '<FIRSTNAME>' . htmlspecialchars($orders['delivery_firstname']) . '</FIRSTNAME>' . "\n" .
-                     '<LASTNAME>' . htmlspecialchars($orders['delivery_lastname']) . '</LASTNAME>' . "\n" .
-                     '<STREET>' . htmlspecialchars($orders['delivery_street_address']) . '</STREET>' . "\n" .
-                     '<POSTCODE>' . htmlspecialchars($orders['delivery_postcode']) . '</POSTCODE>' . "\n" .
-                     '<CITY>' . htmlspecialchars($orders['delivery_city']) . '</CITY>' . "\n" .
-                     '<SUBURB>' . htmlspecialchars($orders['delivery_suburb']) . '</SUBURB>' . "\n" .
-                     '<STATE>' . htmlspecialchars($orders['delivery_state']) . '</STATE>' . "\n" .
-                     '<COUNTRY>' . htmlspecialchars($orders['delivery_country_iso_code_2']) . '</COUNTRY>' . "\n" .
-                     '</DELIVERY_ADDRESS>' . "\n" .
-                     '<PAYMENT>' . "\n" . 
-                     '<PAYMENT_METHOD>' . htmlspecialchars($orders['payment_method']) . '</PAYMENT_METHOD>'  . "\n" .
-                     '<PAYMENT_CLASS>' . htmlspecialchars($orders['payment_class']) . '</PAYMENT_CLASS>'  . "\n";
+                 $schema  = '<ORDER_INFO>' . "\n" .
+                            '<ORDER_HEADER>' . "\n" .
+                            '<ORDER_ID>' . $orders['orders_id'] . '</ORDER_ID>' . "\n" .
+                            '<CUSTOMER_ID>' . $orders['customers_id'] . '</CUSTOMER_ID>' . "\n" .
+                            '<ORDER_DATE>' . $orders['date_purchased'] . '</ORDER_DATE>' . "\n" .
+                            '<ORDER_STATUS>' . $orders['orders_status'] . '</ORDER_STATUS>' . "\n" .
+                            '<ORDER_CURRENCY>' . htmlspecialchars($orders['currency']) . '</ORDER_CURRENCY>' . "\n" .
+                            '<ORDER_CURRENCY_VALUE>' . $orders['currency_value'] . '</ORDER_CURRENCY_VALUE>' . "\n" .
+                            '</ORDER_HEADER>' . "\n" .
+                            '<BILLING_ADDRESS>' . "\n" .
+                            '<COMPANY>' . htmlspecialchars($orders['billing_company']) . '</COMPANY>' . "\n" .
+                            '<FIRSTNAME>' . htmlspecialchars($orders['billing_firstname']) . '</FIRSTNAME>' . "\n" .
+                            '<LASTNAME>' . htmlspecialchars($orders['billing_lastname']) . '</LASTNAME>' . "\n" .
+                            '<STREET>' . htmlspecialchars($orders['billing_street_address']) . '</STREET>' . "\n" .
+                            '<POSTCODE>' . htmlspecialchars($orders['billing_postcode']) . '</POSTCODE>' . "\n" .
+                            '<CITY>' . htmlspecialchars($orders['billing_city']) . '</CITY>' . "\n" .
+                            '<SUBURB>' . htmlspecialchars($orders['billing_suburb']) . '</SUBURB>' . "\n" .
+                            '<STATE>' . htmlspecialchars($orders['billing_state']) . '</STATE>' . "\n" .
+                            '<COUNTRY>' . htmlspecialchars($orders['billing_country_iso_code_2']) . '</COUNTRY>' . "\n" .
+                            '<TELEPHONE>' . htmlspecialchars($orders['customers_telephone']) . '</TELEPHONE>' . "\n" .
+                            '<EMAIL>' . htmlspecialchars($orders['customers_email_address']) . '</EMAIL>' . "\n" .
+                            '<BIRTHDAY>' . htmlspecialchars($cust_dob) . '</BIRTHDAY>' . "\n" .
+                            '<GENDER>' . htmlspecialchars($cust_gender) . '</GENDER>' . "\n" .
+                            '</BILLING_ADDRESS>' . "\n" .
+                            '<DELIVERY_ADDRESS>' . "\n" .
+                            '<COMPANY>' . htmlspecialchars($orders['delivery_company']) . '</COMPANY>' . "\n" .
+                            '<FIRSTNAME>' . htmlspecialchars($orders['delivery_firstname']) . '</FIRSTNAME>' . "\n" .
+                            '<LASTNAME>' . htmlspecialchars($orders['delivery_lastname']) . '</LASTNAME>' . "\n" .
+                            '<STREET>' . htmlspecialchars($orders['delivery_street_address']) . '</STREET>' . "\n" .
+                            '<POSTCODE>' . htmlspecialchars($orders['delivery_postcode']) . '</POSTCODE>' . "\n" .
+                            '<CITY>' . htmlspecialchars($orders['delivery_city']) . '</CITY>' . "\n" .
+                            '<SUBURB>' . htmlspecialchars($orders['delivery_suburb']) . '</SUBURB>' . "\n" .
+                            '<STATE>' . htmlspecialchars($orders['delivery_state']) . '</STATE>' . "\n" .
+                            '<COUNTRY>' . htmlspecialchars($orders['delivery_country_iso_code_2']) . '</COUNTRY>' . "\n" .
+                            '</DELIVERY_ADDRESS>' . "\n" .
+                            '<PAYMENT>' . "\n" . 
+                            '<PAYMENT_METHOD>' . htmlspecialchars($orders['payment_method']) . '</PAYMENT_METHOD>'  . "\n" .
+                            '<PAYMENT_CLASS>' . htmlspecialchars($orders['payment_class']) . '</PAYMENT_CLASS>'  . "\n";
           
-          switch ($orders['payment_class']) {
-            case 'banktransfer':
-              // Bankverbindung laden, wenn aktiv
-              $bank_name = '';
-              $bank_blz  = '';
-              $bank_kto  = '';
-              $bank_inh  = '';
-              $bank_stat = -1;
+                 switch ($orders['payment_class']) {
+                   case 'banktransfer':
+                     // Bankverbindung laden, wenn aktiv
+                     $bank_name = '';
+                     $bank_blz  = '';
+                     $bank_kto  = '';
+                     $bank_inh  = '';
+                     $bank_stat = -1;
               
-              $bank_query = "
-                SELECT
-                  *
-                FROM " . $oosDBTable['banktransfer'] . "
-                WHERE orders_id = " . $orders['orders_id'];
-                  
-              $bank_result = $db->Execute($bank_query);
-              if ($bankdata = $bank_result->fields) {
-                $bank_name = $bankdata['banktransfer_bankname'];
-                $bank_blz  = $bankdata['banktransfer_blz'];
-                $bank_kto  = $bankdata['banktransfer_number'];
-                $bank_inh  = $bankdata['banktransfer_owner'];
-                $bank_stat = $bankdata['banktransfer_status'];
-              }
-              $schema .= '<PAYMENT_BANKTRANS_BNAME>' . htmlspecialchars($bank_name) . '</PAYMENT_BANKTRANS_BNAME>' . "\n" .
-                         '<PAYMENT_BANKTRANS_BLZ>' . htmlspecialchars($bank_blz) . '</PAYMENT_BANKTRANS_BLZ>' . "\n" .
-                         '<PAYMENT_BANKTRANS_NUMBER>' . htmlspecialchars($bank_kto) . '</PAYMENT_BANKTRANS_NUMBER>' . "\n" .
-                         '<PAYMENT_BANKTRANS_OWNER>' . htmlspecialchars($bank_inh) . '</PAYMENT_BANKTRANS_OWNER>' . "\n" .
-                         '<PAYMENT_BANKTRANS_STATUS>' . htmlspecialchars($bank_stat) . '</PAYMENT_BANKTRANS_STATUS>' . "\n";
-              break;
-          }   
-          
-          $schema .= '</PAYMENT>' . "\n" . 
-                     '<SHIPPING>' . "\n" . 
-                     '<SHIPPING_METHOD>' . htmlspecialchars($orders['shipping_method']) . '</SHIPPING_METHOD>'  . "\n" .
-                     '<SHIPPING_CLASS>' . htmlspecialchars($orders['shipping_class']) . '</SHIPPING_CLASS>'  . "\n" .
-                     '</SHIPPING>' . "\n" .                      
-                     '<ORDER_PRODUCTS>' . "\n";
+                     $bank_query = "SELECT banktransfer_prz, banktransfer_status, banktransfer_owner, banktransfer_number, 
+                                           banktransfer_bankname, banktransfer_blz, banktransfer_fax 
+                                    FROM " . $oosDBTable['banktransfer'] . "  
+                                    WHERE orders_id = " . $orders['orders_id'];
+                     $bank_result = $db->Execute($bank_query);
                      
-          $products_query = "
-            SELECT
-              orders_products_id,
-              products_id,
-              products_model,
-              products_name,
-              final_price,
-              products_tax,
-              products_quantity
-            FROM 
-              " . $oosDBTable['orders_products'] . "
-            WHERE
-              orders_id = '" . $orders['orders_id'] . "'";
-              
-          $products_result = $db->Execute($products_query);
-          
-          while ($products = tep_db_fetch_array($products_result)) {
-          
-            $schema .= '<PRODUCT>' . "\n" .
-                       '<PRODUCTS_ID>' . $products['products_id'] . '</PRODUCTS_ID>' . "\n" .
-                       '<PRODUCTS_QUANTITY>' . $products['products_quantity'] . '</PRODUCTS_QUANTITY>' . "\n" .
-                       '<PRODUCTS_MODEL>' . htmlspecialchars($products['products_model']) . '</PRODUCTS_MODEL>' . "\n" .
-                       '<PRODUCTS_NAME>' . htmlspecialchars($products['products_name']) . '</PRODUCTS_NAME>' . "\n" .
-                       '<PRODUCTS_PRICE>' . $products['final_price'] . '</PRODUCTS_PRICE>' . "\n" .
-                       '<PRODUCTS_TAX>' . $products['products_tax'] . '</PRODUCTS_TAX>' . "\n";
-                       
-            
-            $attributes_query = "
-              SELECT
-                products_options,
-                products_options_values,
-                options_values_price,
-                price_prefix
-              FROM 
-                " . $oosDBTable['orders_products_attributes'] . " 
-              WHERE
-                orders_id = '" .$orders['orders_id'] . "' AND 
-                orders_products_id = '" . $products['orders_products_id'] . "'";
-                
-            $attributes_result = $db->Execute($attributes_query);
-            
-            
-            if (tep_db_num_rows( $attributes_result ) > 0) 
-            {
-              while ($attributes = $attributes_result->fields) {
-                $schema .= '<OPTION>' . "\n" .
-                           '<PRODUCTS_OPTIONS>' .  htmlspecialchars($attributes['products_options']) . '</PRODUCTS_OPTIONS>' . "\n" . 
-                           '<PRODUCTS_OPTIONS_VALUES>' .  htmlspecialchars($attributes['products_options_values']) . '</PRODUCTS_OPTIONS_VALUES>' . "\n" .
-                           '<PRODUCTS_OPTIONS_PRICE>' .  $attributes['price_prefix'] . ' ' . $attributes['options_values_price'] . '</PRODUCTS_OPTIONS_PRICE>' . "\n" .
-                           '</OPTION>' . "\n";
-                $attributes_result->MoveNext();
-              }
-            }            
-            $schema .=  '</PRODUCT>' . "\n";
+                     if ($bankdata = $bank_result->fields) {
+                       $bank_name = $bankdata['banktransfer_bankname'];
+                       $bank_blz  = $bankdata['banktransfer_blz'];
+                       $bank_kto  = $bankdata['banktransfer_number'];
+                       $bank_inh  = $bankdata['banktransfer_owner'];
+                       $bank_stat = $bankdata['banktransfer_status'];
+                     }
+                     $schema .= '<PAYMENT_BANKTRANS_BNAME>' . htmlspecialchars($bank_name) . '</PAYMENT_BANKTRANS_BNAME>' . "\n" .
+                                '<PAYMENT_BANKTRANS_BLZ>' . htmlspecialchars($bank_blz) . '</PAYMENT_BANKTRANS_BLZ>' . "\n" .
+                                '<PAYMENT_BANKTRANS_NUMBER>' . htmlspecialchars($bank_kto) . '</PAYMENT_BANKTRANS_NUMBER>' . "\n" .
+                                '<PAYMENT_BANKTRANS_OWNER>' . htmlspecialchars($bank_inh) . '</PAYMENT_BANKTRANS_OWNER>' . "\n" .
+                                '<PAYMENT_BANKTRANS_STATUS>' . htmlspecialchars($bank_stat) . '</PAYMENT_BANKTRANS_STATUS>' . "\n";
+                   break;
+                 }   
 
-          }
+                 $schema .= '</PAYMENT>' . "\n" . 
+                            '<SHIPPING>' . "\n" . 
+                            '<SHIPPING_METHOD>' . htmlspecialchars($orders['shipping_method']) . '</SHIPPING_METHOD>'  . "\n" .
+                            '<SHIPPING_CLASS>' . htmlspecialchars($orders['shipping_class']) . '</SHIPPING_CLASS>'  . "\n" .
+                            '</SHIPPING>' . "\n" .                      
+                            '<ORDER_PRODUCTS>' . "\n";
+                     
+                 $products_query = "SELECT orders_products_id, products_id, products_model, products_name,
+                                           final_price, products_tax, products_quantity
+                                    FROM " . $oosDBTable['orders_products'] . "
+                                    WHERE orders_id = '" . $orders['orders_id'] . "'";
+                 $products_result = $db->Execute($products_query);
           
-          $schema .= '</ORDER_PRODUCTS>' . "\n";                     
-          $schema .= '<ORDER_TOTAL>' . "\n";
+                 while ($products = $products_result->fields) {
           
-          $totals_query = "
-            SELECT 
-              title,
-              value,
-              class,
-              sort_order
-            FROM
-              " . $oosDBTable['orders_total'] . "
-            WHERE
-              orders_id = '" . $orders['orders_id'] . "'
-            ORDER BY
-              sort_order";
-              
-          $totals_result = $db->Execute($totals_query);
-          
-          while ($totals = $totals_result->fields) {
-          
-            $total_prefix = "";
-            $total_tax  = "";
-            $total_prefix = $order_total_class[$totals['class']]['prefix'];
-            $total_tax = $order_total_class[$totals['class']]['tax'];
+                   $schema .= '<PRODUCT>' . "\n" .
+                              '<PRODUCTS_ID>' . $products['products_id'] . '</PRODUCTS_ID>' . "\n" .
+                              '<PRODUCTS_QUANTITY>' . $products['products_quantity'] . '</PRODUCTS_QUANTITY>' . "\n" .
+                              '<PRODUCTS_MODEL>' . htmlspecialchars($products['products_model']) . '</PRODUCTS_MODEL>' . "\n" .
+                              '<PRODUCTS_NAME>' . htmlspecialchars($products['products_name']) . '</PRODUCTS_NAME>' . "\n" .
+                              '<PRODUCTS_PRICE>' . $products['final_price'] . '</PRODUCTS_PRICE>' . "\n" .
+                              '<PRODUCTS_TAX>' . $products['products_tax'] . '</PRODUCTS_TAX>' . "\n";      
             
-            $schema .= '<TOTAL>' . "\n" .
-                       '<TOTAL_TITLE>' . htmlspecialchars($totals['title']) . '</TOTAL_TITLE>' . "\n" .
-                       '<TOTAL_VALUE>' . htmlspecialchars($totals['value']) . '</TOTAL_VALUE>' . "\n" .
-                       '<TOTAL_CLASS>' . htmlspecialchars($totals['class']) . '</TOTAL_CLASS>' . "\n" .
-                       '<TOTAL_SORT_ORDER>' . htmlspecialchars($totals['sort_order']) . '</TOTAL_SORT_ORDER>' . "\n" .
-                       '<TOTAL_PREFIX>' . htmlspecialchars($total_prefix) . '</TOTAL_PREFIX>' . "\n" .
-                       '<TOTAL_TAX>' . htmlspecialchars($total_tax) . '</TOTAL_TAX>' . "\n" . 
-                       '</TOTAL>' . "\n";
-            $totals_result->MoveNext();            
-          }
-          
-          $schema .= '</ORDER_TOTAL>' . "\n";
-          
-          $comments_query = "
-            SELECT
-              comments
-            FROM 
-              " . $oosDBTable['orders_status_history'] . "
-            WHERE
-              orders_id = '" . $orders['orders_id'] . "' AND
-              orders_status_id = '" . $orders['orders_status'] . "' ";
-              
-          $comments_result = $db->Execute ($comments_query);
-          
-          if ($comments = $comments_result->fields) {
-            $schema .=  '<ORDER_COMMENTS>' . htmlspecialchars($comments['comments']) . '</ORDER_COMMENTS>' . "\n";
-            $comments_result->MoveNext();
-          }
-          
-          $schema .= '</ORDER_INFO>' . "\n\n";
-          echo $schema;
-        }
-        
-        $schema = '</ORDER>' . "\n\n";
-        
-        echo $schema;
-        exit;
+                   $attributes_query = "SELECT products_options, products_options_values, options_values_price, price_prefix
+                                        FROM " . $oosDBTable['orders_products_attributes'] . " 
+                                        WHERE orders_id = '" .$orders['orders_id'] . "' 
+                                          AND orders_products_id = '" . $products['orders_products_id'] . "'";
+                   $attributes_result = $db->Execute($attributes_query);
+            
+                   if ($attributes_result->RecordCount() > 0) {
+                     while ($attributes = $attributes_result->fields) {
+                       $schema .= '<OPTION>' . "\n" .
+                                  '<PRODUCTS_OPTIONS>' .  htmlspecialchars($attributes['products_options']) . '</PRODUCTS_OPTIONS>' . "\n" . 
+                                  '<PRODUCTS_OPTIONS_VALUES>' .  htmlspecialchars($attributes['products_options_values']) . '</PRODUCTS_OPTIONS_VALUES>' . "\n" .
+                                  '<PRODUCTS_OPTIONS_PRICE>' .  $attributes['price_prefix'] . ' ' . $attributes['options_values_price'] . '</PRODUCTS_OPTIONS_PRICE>' . "\n" .
+                                  '</OPTION>' . "\n";
 
+                       $attributes_result->MoveNext();
+                     }
+                   }            
+                   $schema .=  '</PRODUCT>' . "\n";
+
+                   $products_result->MoveNext();
+                 }
+          
+                 $schema .= '</ORDER_PRODUCTS>' . "\n";                     
+                 $schema .= '<ORDER_TOTAL>' . "\n";
+          
+                 $totals_query = "SELECT title, value, class, sort_order
+                                  FROM " . $oosDBTable['orders_total'] . "
+                                  WHERE orders_id = '" . $orders['orders_id'] . "'
+                                  ORDER BY sort_order";
+                 $totals_result = $db->Execute($totals_query);
+          
+                 while ($totals = $totals_result->fields) {
+
+                   $total_prefix = "";
+                   $total_tax  = "";
+                   $total_prefix = $order_total_class[$totals['class']]['prefix'];
+                   $total_tax = $order_total_class[$totals['class']]['tax'];
+            
+                   $schema .= '<TOTAL>' . "\n" .
+                              '<TOTAL_TITLE>' . htmlspecialchars($totals['title']) . '</TOTAL_TITLE>' . "\n" .
+                              '<TOTAL_VALUE>' . htmlspecialchars($totals['value']) . '</TOTAL_VALUE>' . "\n" .
+                              '<TOTAL_CLASS>' . htmlspecialchars($totals['class']) . '</TOTAL_CLASS>' . "\n" .
+                              '<TOTAL_SORT_ORDER>' . htmlspecialchars($totals['sort_order']) . '</TOTAL_SORT_ORDER>' . "\n" .
+                              '<TOTAL_PREFIX>' . htmlspecialchars($total_prefix) . '</TOTAL_PREFIX>' . "\n" .
+                              '<TOTAL_TAX>' . htmlspecialchars($total_tax) . '</TOTAL_TAX>' . "\n" . 
+                              '</TOTAL>' . "\n";
+
+                   $totals_result->MoveNext();            
+                 }
+          
+                 $schema .= '</ORDER_TOTAL>' . "\n";
+          
+                 $comments_query = "SELECT comments
+                                    FROM " . $oosDBTable['orders_status_history'] . "
+                                    WHERE orders_id = '" . $orders['orders_id'] . "' 
+                                      AND orders_status_id = '" . $orders['orders_status'] . "' ";
+                 $comments_result = $db->Execute ($comments_query);
+          
+                 if ($comments = $comments_result->fields) {
+                     $schema .=  '<ORDER_COMMENTS>' . htmlspecialchars($comments['comments']) . '</ORDER_COMMENTS>' . "\n";
+
+                   $comments_result->MoveNext();
+                 }
+           
+                 $schema .= '</ORDER_INFO>' . "\n\n";
+                 echo $schema;
+                 
+                 $orders_result->MoveNext();
+               }
+        
+               $schema = '</ORDER>' . "\n\n";
+        
+               echo $schema;
+               exit;
 
 //----------------------------------------------------------------------------- 
              case 'products_export':
@@ -597,13 +562,28 @@
                oosSetTimeLimit(0);
 
                $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-                  '<PRODUCTS>' . "\n";
+                         '<PRODUCTS>' . "\n";
                echo $schema;                
  
                $sql = "select products_id, products_quantity, products_model, products_image, products_price, " .
                       "products_date_added, products_last_modified, products_date_available, products_weight, " .
                      "products_status, products_tax_class_id, manufacturers_id, products_ordered from " . TABLE_PRODUCTS;
-         
+               $sql = "SELECT products_id, products_model, products_quantity, products_image, 
+                              products_discount_allowed, products_price, p.products_base_price, p.products_base_unit,
+               p.products_quantity_order_min, p.products_quantity_order_units,
+               p.products_discount1, p.products_discount2, p.products_discount3, p.products_discount4, 
+               p.products_discount1_qty, p.products_discount2_qty, p.products_discount3_qty, 
+               p.products_discount4_qty, p.products_tax_class_id, p.products_date_added, 
+               p.products_date_available, p.manufacturers_id, p.products_price_list 
+           FROM
+               " . $oosDBTable['products'] . " p, 
+               " . $oosDBTable['products_description'] . " pd 
+           WHERE
+               p.products_status >= '1' AND
+               p.products_id = '" . (int)$oos_products_id . "' AND
+               pd.products_id = p.products_id AND
+               pd.products_language = '" . $_SESSION['language'] . "'";
+  $product_info_result = $db->Execute($sql);
                $from = oosDBPrepareInput($_GET['products_from']);
                $anz  = oosDBPrepareInput($_GET['products_count']);
         
@@ -689,43 +669,26 @@
                oosSetTimeLimit(0);
 
                $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-               '<CUSTOMERS>' . "\n";
+                         '<CUSTOMERS>' . "\n";
 
                echo $schema;
-
       
                $from = oosDBPrepareInput($_GET['customers_from']);
                $anz  = oosDBPrepareInput($_GET['customers_count']);
-
     
-    $address_query = "
-      SELECT
-        c.customers_gender,
-        c.customers_id,
-        c.customers_dob,
-        c.customers_email_address,
-        c.customers_telephone,
-        c.customers_fax, 
-        ci.customers_info_date_account_created, 
-        a.entry_firstname,
-        a.entry_lastname,
-        a.entry_company,
-        a.entry_street_address,
-        a.entry_city,
-        a.entry_postcode, 
-	a.entry_suburb,
-	a.entry_state,
-        co.countries_iso_code_2 
-      FROM
-        ".$oosDBTable['customers']. " c, 
-        ".$oosDBTable['customers_info']. " ci, 
-        ".$oosDBTable['address_book'] . " a , 
-        ".$oosDBTable['countries']." co 
-      WHERE
-        c.customers_id = ci.customers_info_id AND 
-        c.customers_id = a.customers_id AND
-        c.customers_default_address_id = a.address_book_id AND 
-        a.entry_country_id  = co.countries_id";
+               $address_query = "SELECT c.customers_gender, c.customers_id, c.customers_dob, c.customers_email_address,
+                                        c.customers_telephone, c.customers_fax, ci.customers_info_date_account_created,
+                                        a.entry_firstname, a.entry_lastname, a.entry_company, a.entry_street_address,
+                                        a.entry_city, a.entry_postcode, a.entry_suburb, a.entry_state,
+                                        co.countries_iso_code_2 
+                                 FROM " . $oosDBTable['customers'] . " c,
+                                      " . $oosDBTable['customers_info']. " ci,
+                                      " . $oosDBTable['address_book'] . " a,
+                                      " . $oosDBTable['countries'] . " co
+                                 WHERE c.customers_id = ci.customers_info_id 
+                                   AND c.customers_id = a.customers_id 
+                                   AND c.customers_default_address_id = a.address_book_id 
+                                   AND a.entry_country_id  = co.countries_id";
         
                if (isset($from)) {
                  if (!isset($anz)) {
