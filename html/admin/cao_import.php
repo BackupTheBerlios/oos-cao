@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_import.php,v 1.5 2005/01/07 09:13:14 r23 Exp $
+   $Id: cao_import.php,v 1.6 2005/01/09 03:24:40 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -71,10 +71,8 @@
 
   require('includes/cao_api.php');
 
- /* Beispiel fuer Useragent 
-     if (oosServerGetVar('HTTP_USER_AGENT')!='CAO-Faktura') exit;
-  */
-
+  if (oosServerGetVar('HTTP_USER_AGENT') != 'CAO-Faktura') exit;
+  
   $version_nr    = '1.36';
   $version_datum = '2004.12.10';
 
@@ -84,7 +82,7 @@
   define('SWITCH_MWST', 'true');
 
   // Um das Loggen einzuschalten false durch true ersetzen.
-  define('LOGGER', 'false'); 
+  define('LOGGER', 'true'); 
 
   // Emails beim Kundenanlegen versenden ?
   define('SEND_ACCOUNT_MAIL', 'false');
@@ -111,7 +109,6 @@
     $user = $_GET['user'];
     $password = $_GET['password'];
   }
-
 
   if (LOGGER == 'true') {
     // log data into db.
@@ -153,7 +150,7 @@
   }
 
   if ($user != '' and $password != '') {
-
+  
     require(OOS_CLASSES . 'class_cao_upload.php');
   
  
@@ -187,7 +184,12 @@
       echo $schema;
     } else {
       $check_admin = $check_admin_result->fields;
-      if (!oosValidatePassword($password, $check_admin['login_password'])) {
+      
+      if (substr($password,0,2) == '%%') {
+        $password = md5(substr($password,2,40));
+      }
+
+      if ($password != $check_admin['login_password']) {
 
         header ("Last-Modified: ". gmdate ("D, d M Y H:i:s"). " GMT");  // immer geändert
         header ("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
@@ -205,7 +207,8 @@
       } else {
         $filename = split('\?', basename($_SERVER['PHP_SELF'])); 
         $filename = $filename[0];
-        $page_key = array_search($filename, $oosFilename);
+        $page_key = $filename;
+        # $page_key = array_search($filename, $oosFilename);
         $login_groups_id = $check_admin[login_groups_id];
      
         $access_result = $db->Execute("SELECT admin_files_name FROM " . $oosDBTable['admin_files'] . " WHERE FIND_IN_SET( '" . $login_groups_id . "', admin_groups_id) AND admin_files_name = '" . $page_key . "'");
@@ -1154,7 +1157,7 @@ if (isset($_POST['customers_cid'])) $sql_customers_data_array['customers_cid'] =
             } // switch
 
           } else {
-      
+        
             if (($_GET['action']) && (oosServerGetVar('REQUEST_METHOD')=='GET') && ($_GET['action'])) {
               $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
                         '<STATUS>' . "\n" .
@@ -1175,12 +1178,10 @@ if (isset($_POST['customers_cid'])) $sql_customers_data_array['customers_cid'] =
                         '</STATUS_DATA>' . "\n" .
                         '</STATUS>' . "\n\n";
               echo $schema;
-            }
+            }     
           }
         }
-      }
+      } 
     }
-  } else {
-    oosRedirect(oosLink($oosFilename['forbiden']));
-  }
+  } 
 ?>
