@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: newtables.php,v 1.1 2005/01/10 10:41:16 r23 Exp $
+   $Id: newtables.php,v 1.2 2005/01/11 18:26:20 r23 Exp $
    ----------------------------------------------------------------------
    Based on:
    
@@ -69,5 +69,61 @@ $flds = "
   get_data X
 ";
 dosql($table, $flds);
+
+
+$table = $prefix_table . 'orders';
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `payment_class` VARCHAR( 32 ) NOT NULL AFTER `payment_method`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+} 
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD  `shipping_method` VARCHAR( 255 ) NOT NULL AFTER `payment_class`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+} 
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `shipping_class` VARCHAR( 32 ) NOT NULL AFTER `shipping_method`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+} 
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `billing_country_iso_code_2` VARCHAR( 2 ) NOT NULL AFTER `billing_country`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `delivery_country_iso_code_2` VARCHAR( 2 ) NOT NULL AFTER `delivery_country`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `billing_firstname` VARCHAR( 32 ) NOT NULL AFTER `billing_name`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `billing_lastname` VARCHAR( 32 ) NOT NULL AFTER `billing_firstname`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `delivery_firstname` VARCHAR( 32 ) NOT NULL AFTER `delivery_name`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+$result = $db->Execute("ALTER TABLE " . $table . " ADD `delivery_lastname` VARCHAR( 32 ) NOT NULL AFTER `delivery_firstname`");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+$result = $db->Execute("ALTER TABLE " . $table . " CHANGE `payment_method` `payment_method` VARCHAR( 255 ) NOT NULL");
+if ($result === false) {
+  echo '<br /><img src="images/no.gif" alt="" border="0" align="absmiddle"><font class="oos-error">' .  $db->ErrorMsg() . NOTMADE . '</font>';
+}
+
+echo '<br /><img src="images/yes.gif" alt="" border="0" align="absmiddle"><font class="oos-title">' . $table . ' ' . UPDATED .'</font>';
+
 
 ?>
