@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: xml_export.php,v 1.3 2005/01/09 07:51:31 r23 Exp $
+   $Id: xml_export.php,v 1.4 2005/01/09 09:28:25 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -85,7 +85,7 @@
 
   require('includes/cao_api.php');
 
- # if (oosServerGetVar('HTTP_USER_AGENT') != 'CAO-Faktura') exit;
+  if (oosServerGetVar('HTTP_USER_AGENT') != 'CAO-Faktura') exit;
   
   $version_nr    = '1.37';
   $version_datum = '2004.12.10';
@@ -227,10 +227,11 @@ if (substr($password,0,2)=='%%') {
                echo $schema;
                   
                $cat_query = $db->Execute("SELECT categories_id, categories_image, parent_id, sort_order, date_added, last_modified
-                                          FROM " . TABLE_CATEGORIES . " 
+                                          FROM " . $oosDBTable['categories'] . " 
                                           ORDER BY parent_id, categories_id");
-                                          
-               while ($cat = xtc_db_fetch_array($cat_query)) {
+               $cat_result = $db->Execute($cat_query);
+
+               while ($cat = $cat_result->fields) {
                  $schema  = '<CATEGORIES_DATA>' . "\n" .
                      '<ID>' . $cat['categories_id'] . '</ID>' . "\n" .
                      '<PARENT_ID>' . $cat['parent_id'] . '</PARENT_ID>' . "\n" .
@@ -241,13 +242,13 @@ if (substr($password,0,2)=='%%') {
 
 
                  $detail_query = "SELECT cd.categories_id, cd.language_id, cd.categories_name, l.code as lang_code, l.name as lang_name
-                                FROM " . TABLE_CATEGORIES_DESCRIPTION . " cd,
-                                     " . TABLE_LANGUAGES . " l
+                                FROM " . $oosDBTable['categories_description'] . " cd,
+                                     " . $oosDBTable['languages'] . " l
                                 WHERE cd.categories_id=" . $cat['categories_id'] . " 
-                                AND l.languages_id= cd.language_id";
+                                AND l.languages_id = cd.language_id";
                  $detail_result = $db->Execute($detail_query);
                  
-                 while ($details = xtc_db_fetch_array($detail_query)) {
+                 while ($details = $detail_result->fields) {
                    $schema .= "<CATEGORIES_DESCRIPTION ID='" . $details["language_id"] ."' CODE='" . $details["lang_code"] . "' NAME='" . $details["lang_name"] . "'>\n";
                    $schema .= "<NAME>" . htmlspecialchars($details["categories_name"]) . "</NAME>" . "\n";
                    $schema .= "<HEADING_TITLE>" . htmlspecialchars($details["categories_heading_title"]) . "</HEADING_TITLE>" . "\n";
@@ -256,20 +257,23 @@ if (substr($password,0,2)=='%%') {
                    $schema .= "<META_DESCRIPTION>" . htmlspecialchars($details["categories_meta_description"]) . "</META_DESCRIPTION>" . "\n";
                    $schema .= "<META_KEYWORDS>" . htmlspecialchars($details["categories_meta_keywords"]) . "</META_KEYWORDS>" . "\n";
                    $schema .= "</CATEGORIES_DESCRIPTION>\n";
+                   $detail_result->MoveNext();
                  }
           
                  // Produkte in dieser Categorie auflisten
                  $prod2cat_query = "SELECT categories_id, products_id 
-                                    FROM " . TABLE_PRODUCTS_TO_CATEGORIES . " 
+                                    FROM " . $oosDBTable['products_to_categories'] . " 
                                     WHERE categories_id = '" . $cat['categories_id'] . "'";
                  $prod2cat_result = $db->Execute($prod2cat_query);
                                        
-                 while ($prod2cat = xtc_db_fetch_array($prod2cat_query)) {
+                 while ($prod2cat = $prod2cat_result->fields) {
                    $schema .="<PRODUCTS ID='" . $prod2cat["products_id"] ."'></PRODUCTS>" . "\n";
+                   $prod2cat_result->MoveNext();
                  }
           
                  $schema .= '</CATEGORIES_DATA>' . "\n";
                  echo $schema;
+                 $cat_result->MoveNext();
                }
                $schema = '</CATEGORIES>' . "\n";
         
@@ -286,9 +290,10 @@ if (substr($password,0,2)=='%%') {
                echo $schema;
                   
                $cat_query = $db->Execute("SELECT manufacturers_id, manufacturers_name, manufacturers_image, date_added, last_modified 
-                                          FROM " . TABLE_MANUFACTURERS . " order by manufacturers_id");
-               while ($cat = xtc_db_fetch_array($cat_query)) {
-                 
+                                          FROM " . $oosDBTable['manufacturers'] . " order by manufacturers_id");
+               $cat_result = $db->Execute($cat_query);
+
+               while ($cat = $cat_result->fields) {
                  $schema  = '<MANUFACTURERS_DATA>' . "\n" .
                             '<ID>' . $cat['manufacturers_id'] . '</ID>' . "\n" .
                             '<NAME>' . htmlspecialchars($cat['manufacturers_name']) . '</NAME>' . "\n" .
@@ -298,22 +303,24 @@ if (substr($password,0,2)=='%%') {
                      
                  $sql = "SELECT mi.manufacturers_id, mi.languages_id, mi.manufacturers_url, url_clicked,
                                 date_last_click, l.code as lang_code, l.name as lang_name
-                         FROM " . TABLE_MANUFACTURERS_INFO . " mi,
-                              " . TABLE_LANGUAGES . " l
+                         FROM " .  $oosDBTable['manufacturers_info'] . " mi,
+                              " . $oosDBTable['languages'] . " l
                          WHERE mi.manufacturers_id= " . $cat['manufacturers_id'] . " 
                          AND l.languages_id = mi.languages_id";
-                 $detail_query = $db->Execute($sql);
+                 $detai_result = $db->Execute($sql);
 
-                 while ($details = xtc_db_fetch_array($detail_query)) {
+                 while ($details = $detai_result->fields) {
                    $schema .= "<MANUFACTURERS_DESCRIPTION ID='" . $details["languages_id"] ."' CODE='" . $details["lang_code"] . "' NAME='" . $details["lang_name"] . "'>\n";
                    $schema .= "<URL>" . htmlspecialchars($details["manufacturers_url"]) . "</URL>" . "\n" ;
                    $schema .= "<URL_CLICK>" . $details["url_clicked"] . "</URL_CLICK>" . "\n" ;
                    $schema .= "<DATE_LAST_CLICK>" . $details["date_last_click"] . "</DATE_LAST_CLICK>" . "\n" ;
                    $schema .= "</MANUFACTURERS_DESCRIPTION>\n";
+                   $detai_result->MoveNext();
                  }
           
                  $schema .= '</MANUFACTURERS_DATA>' . "\n";
                  echo $schema;
+                 $cat_result->MoveNext();
                }
                $schema = '</MANUFACTURERS>' . "\n";
         
@@ -336,24 +343,24 @@ if (substr($password,0,2)=='%%') {
           SELECT
             *
           FROM 
-            " . TABLE_ORDERS . "
+            " . $oosDBTable['orders'] . "
           WHERE
-            orders_id >= '" . tep_db_input($order_from) . "'";
+            orders_id >= '" . oosDBInput($order_from) . "'";
             
                if (!isset($order_status) && !isset($order_from)) {
                  $order_status = 1;
                  $orders_query .= " AND orders_status = " . $order_status;
                }
         
-               $orders_result = tep_db_query($orders_query);
+               $orders_result = $db->Execute($orders_query);
         
                while ($orders = tep_db_fetch_array($orders_result)) {
           
                  // Geburtsdatum laden
                  $cust_query = "SELECT customers_dob, customers_gender
-                                FROM " . TABLE_CUSTOMERS . "
+                                FROM " . $oosDBTable['customers'] . "
                                 WHERE customers_id=" . $orders['customers_id'];
-                 $cust_result = tep_db_query ($cust_query);
+                 $cust_result = $db->Execute ($cust_query);
           
                  if (tep_db_num_rows($cust_result) >0) {
                    $cust_data = tep_db_fetch_array($cust_result);
@@ -415,12 +422,10 @@ if (substr($password,0,2)=='%%') {
               $bank_query = "
                 SELECT
                   *
-                FROM
-                  banktransfer
-                WHERE
-                  orders_id = " . $orders['orders_id'];
+                FROM " . $oosDBTable['banktransfer'] . "
+                WHERE orders_id = " . $orders['orders_id'];
                   
-              $bank_result = tep_db_query($bank_query);
+              $bank_result = $db->Execute($bank_query);
               if (($bank_result) && ($bankdata = tep_db_fetch_array($bank_result))) {
                 $bank_name = $bankdata['banktransfer_bankname'];
                 $bank_blz  = $bankdata['banktransfer_blz'];
@@ -453,11 +458,11 @@ if (substr($password,0,2)=='%%') {
               products_tax,
               products_quantity
             FROM 
-              " . TABLE_ORDERS_PRODUCTS . "
+              " . $oosDBTable['orders_products'] . "
             WHERE
               orders_id = '" . $orders['orders_id'] . "'";
               
-          $products_result = tep_db_query($products_query);
+          $products_result = $db->Execute($products_query);
           
           while ($products = tep_db_fetch_array($products_result)) {
           
@@ -477,12 +482,12 @@ if (substr($password,0,2)=='%%') {
                 options_values_price,
                 price_prefix
               FROM 
-                " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " 
+                " . $oosDBTable['orders_products_attributes'] . " 
               WHERE
                 orders_id = '" .$orders['orders_id'] . "' AND 
                 orders_products_id = '" . $products['orders_products_id'] . "'";
                 
-            $attributes_result = tep_db_query($attributes_query);
+            $attributes_result = $db->Execute($attributes_query);
             
             
             if (tep_db_num_rows( $attributes_result ) > 0) 
@@ -510,13 +515,13 @@ if (substr($password,0,2)=='%%') {
               class,
               sort_order
             FROM
-              " . TABLE_ORDERS_TOTAL . "
+              " . $oosDBTable['orders_total'] . "
             WHERE
               orders_id = '" . $orders['orders_id'] . "'
             ORDER BY
               sort_order";
               
-          $totals_result = tep_db_query($totals_query);
+          $totals_result = $db->Execute($totals_query);
           
           while ($totals = tep_db_fetch_array($totals_result)) {
           
@@ -541,12 +546,12 @@ if (substr($password,0,2)=='%%') {
             SELECT
               comments
             FROM 
-              " . TABLE_ORDERS_STATUS_HISTORY . "
+              " . $oosDBTable['orders_status_history'] . "
             WHERE
               orders_id = '" . $orders['orders_id'] . "' AND
               orders_status_id = '" . $orders['orders_status'] . "' ";
               
-          $comments_result = tep_db_query ($comments_query);
+          $comments_result = $db->Execute ($comments_query);
           
           if ($comments =  tep_db_fetch_array($comments_result)) {
             $schema .=  '<ORDER_COMMENTS>' . htmlspecialchars($comments['comments']) . '</ORDER_COMMENTS>' . "\n";
@@ -585,7 +590,7 @@ if (substr($password,0,2)=='%%') {
                  $sql .= " limit " . $from . "," . $anz;
                }
                   
-               $orders_query = tep_db_query($sql);
+               $orders_query = $db->Execute($sql);
                while ($products = tep_db_fetch_array($orders_query)) {
         
           $schema  = '<PRODUCT_INFO>' . "\n" .
@@ -619,14 +624,14 @@ if (substr($password,0,2)=='%%') {
               name as language_name,
               code as language_code
             FROM
-              " . TABLE_PRODUCTS_DESCRIPTION . " pd, 
-              " . TABLE_LANGUAGES ." l
+              " . $oosDBTable['products_description'] . " pd, 
+              " . $oosDBTable['languages'] ." l
             WHERE
               pd.language_id = l.languages_id AND
               pd.products_id=" . $products['products_id'];
               
           
-          $detail_result = tep_db_query($detail_query);
+          $detail_result = $db->Execute($detail_query);
 
                  while ($details = tep_db_fetch_array($detail_result)) {
           
@@ -665,8 +670,8 @@ if (substr($password,0,2)=='%%') {
                echo $schema;
 
       
-               $from = oosDBPrepareInput($HTTP_GET_VARS['customers_from']);
-               $anz  = oosDBPrepareInput($HTTP_GET_VARS['customers_count']);
+               $from = oosDBPrepareInput($_GET['customers_from']);
+               $anz  = oosDBPrepareInput($_GET['customers_count']);
 
     
     $address_query = "
@@ -688,10 +693,10 @@ if (substr($password,0,2)=='%%') {
 	a.entry_state,
         co.countries_iso_code_2 
       FROM
-        ".TABLE_CUSTOMERS. " c, 
-        ".TABLE_CUSTOMERS_INFO. " ci, 
-        ".TABLE_ADDRESS_BOOK . " a , 
-        ".TABLE_COUNTRIES." co 
+        ".$oosDBTable['customers']. " c, 
+        ".$oosDBTable['customers_info']. " ci, 
+        ".$oosDBTable['address_book'] . " a , 
+        ".$oosDBTable['countries']." co 
       WHERE
         c.customers_id = ci.customers_info_id AND 
         c.customers_id = a.customers_id AND
@@ -705,7 +710,7 @@ if (substr($password,0,2)=='%%') {
                  $address_query.= " LIMIT " . $from . "," . $anz;
                }
     
-               $address_result = tep_db_query($address_query);
+               $address_result = $db->Execute($address_query);
 
                while ($address = xtc_db_fetch_array($address_result))  {
       
@@ -747,7 +752,7 @@ if (substr($password,0,2)=='%%') {
     
               $address_query = "
               SELECT customers_id, customers_gender, customers_firstname, customers_lastname, customers_email_address
-              FROM " . TABLE_CUSTOMERS. " 
+              FROM " . $oosDBTable['customers']. " 
               WHERE customers_newsletter = 1";
         
               if (isset($from)) {
@@ -757,7 +762,7 @@ if (substr($password,0,2)=='%%') {
                 $address_query.= " LIMIT " . $from . "," . $anz;
               }
     
-    $address_result = tep_db_query($address_query);
+    $address_result = $db->Execute($address_query);
     
               while ($address = tep_db_fetch_array($address_result)) {
                 $schema .= '<CUSTOMERS_DATA>' . "\n";
@@ -796,8 +801,8 @@ if (substr($password,0,2)=='%%') {
              header ("Pragma: no-cache"); // HTTP/1.0
              header ("Content-type: text/xml");
 
-             if ($_GET['error']=='') $_GET['error']='NO PASSWORD OR USERNAME';
-             if ($_GET['code']=='') $_GET['code']='100';
+             if ($_GET['error'] =='') $_GET['error']='NO PASSWORD OR USERNAME';
+             if ($_GET['code'] =='') $_GET['code']='100';
 
              $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
                        '<STATUS>

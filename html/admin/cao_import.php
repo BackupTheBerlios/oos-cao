@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_import.php,v 1.6 2005/01/09 03:24:40 r23 Exp $
+   $Id: cao_import.php,v 1.7 2005/01/09 09:28:25 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -417,14 +417,14 @@
 //-----------------------------------------------------------------------------
               case 'manufacturers_erase':
 //-----------------------------------------------------------------------------
-                $ManID  = oosDBPrepareInput($_POST['mID']);
+                $manufacturer_id  = oosDBPrepareInput($_POST['mID']);
         
-                if (isset($ManID)) {
+                if (isset($manufacturer_id)) {
                   // Hersteller loeschen
-                  $db->Execute("DELETE FROM " . $oosDBTable['manufacturers'] . " WHERE manufacturers_id = '" . (int)$ManID . "'");
-                  $db->Execute("DELETE FROM " . $oosDBTable['manufacturers_info'] . " WHERE manufacturers_id = '" . (int)$ManID . "'");
+                  $db->Execute("DELETE FROM " . $oosDBTable['manufacturers'] . " WHERE manufacturers_id = '" . (int)$manufacturer_id . "'");
+                  $db->Execute("DELETE FROM " . $oosDBTable['manufacturers_info'] . " WHERE manufacturers_id = '" . (int)$manufacturer_id . "'");
                   // Herstellerverweis in den Artikeln loeschen
-                  $db->Execute("UPDATE " . $oosDBTable['products'] . " SET manufacturers_id = '' WHERE manufacturers_id = '" . (int)$ManID . "'");
+                  $db->Execute("UPDATE " . $oosDBTable['products'] . " SET manufacturers_id = '' WHERE manufacturers_id = '" . (int)$manufacturer_id . "'");
 
                   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
                             '<STATUS>' . "\n" .
@@ -968,7 +968,6 @@ if ($check_status = xtc_db_fetch_array($check_status_result)) {
                 if (isset($_POST['cID'])) $customers_id = oosDBPrepareInput($_POST['cID']);
   
                 $sql_customers_data_array = array();
-if (isset($_POST['customers_cid'])) $sql_customers_data_array['customers_cid'] = $_POST['customers_cid'];
                 if (isset($_POST['customers_firstname'])) $sql_customers_data_array['customers_firstname'] = $_POST['customers_firstname'];
                 if (isset($_POST['customers_lastname'])) $sql_customers_data_array['customers_lastname'] = $_POST['customers_lastname'];
                 if (isset($_POST['customers_dob'])) $sql_customers_data_array['customers_dob'] = $_POST['customers_dob'];
