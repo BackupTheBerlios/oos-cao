@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_import.php,v 1.4 2005/01/07 09:10:31 r23 Exp $
+   $Id: cao_import.php,v 1.5 2005/01/07 09:13:14 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -378,7 +378,7 @@
                     $sql_data_array = array('manufacturers_url' => $manufacturers_url);
              
                     if ($exists == 0) {
-                      $insert_sql_data = array('manufacturers_id' => $products_id,
+                      $insert_sql_data = array('manufacturers_id' => $manufacturers_id,
                                                'manufacturers_language' => $iso_639_2);
                       $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
                       oosDBPerform($oosDBTable['manufacturers_info'], $sql_data_array);
