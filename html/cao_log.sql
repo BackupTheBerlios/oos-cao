@@ -1,3 +1,6 @@
+# $Id: cao_log.sql,v 1.2 2005/01/05 11:27:20 r23 Exp $
+
+
 CREATE TABLE cao_log (
   id int(11) NOT NULL auto_increment,
   date datetime NOT NULL default '0000-00-00 00:00:00',
