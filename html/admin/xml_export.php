@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: xml_export.php,v 1.6 2005/01/10 11:05:09 r23 Exp $
+   $Id: xml_export.php,v 1.7 2005/01/10 11:07:51 r23 Exp $
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
@@ -307,8 +307,9 @@
                   
                echo $schema;
                   
-               $cat_query = $db->Execute("SELECT manufacturers_id, manufacturers_name, manufacturers_image, date_added, last_modified 
-                                          FROM " . $oosDBTable['manufacturers'] . " order by manufacturers_id");
+               $cat_query = "SELECT manufacturers_id, manufacturers_name, manufacturers_image, date_added, last_modified 
+                             FROM " . $oosDBTable['manufacturers'] . " 
+                             ORDER BY manufacturers_id";
                $cat_result = $db->Execute($cat_query);
 
                while ($cat = $cat_result->fields) {
@@ -319,31 +320,34 @@
                             '<DATE_ADDED>' . $cat['date_added'] . '</DATE_ADDED>' . "\n" .
                             '<LAST_MODIFIED>' . $cat['last_modified'] . '</LAST_MODIFIED>' . "\n";
                      
-                 $sql = "SELECT mi.manufacturers_id, mi.languages_id, mi.manufacturers_url, url_clicked,
-                                date_last_click, l.code as lang_code, l.name as lang_name
+                 $sql = "SELECT mi.manufacturers_id, mi.manufacturers_language, mi.manufacturers_url, url_clicked,
+                                date_last_click, l.languages_id, l.name as lang_name
                          FROM " .  $oosDBTable['manufacturers_info'] . " mi,
                               " . $oosDBTable['languages'] . " l
                          WHERE mi.manufacturers_id= " . $cat['manufacturers_id'] . " 
-                         AND l.languages_id = mi.languages_id";
+                         AND l.iso_639_2 = mi.manufacturers_language";
                  $detai_result = $db->Execute($sql);
 
                  while ($details = $detai_result->fields) {
-                   $schema .= "<MANUFACTURERS_DESCRIPTION ID='" . $details["languages_id"] ."' CODE='" . $details["lang_code"] . "' NAME='" . $details["lang_name"] . "'>\n";
-                   $schema .= "<URL>" . htmlspecialchars($details["manufacturers_url"]) . "</URL>" . "\n" ;
-                   $schema .= "<URL_CLICK>" . $details["url_clicked"] . "</URL_CLICK>" . "\n" ;
-                   $schema .= "<DATE_LAST_CLICK>" . $details["date_last_click"] . "</DATE_LAST_CLICK>" . "\n" ;
+                   $schema .= "<MANUFACTURERS_DESCRIPTION ID='" . $details["languages_id"] ."' CODE='" . $details["manufacturers_language"] . "' NAME='" . $details["lang_name"] . "'>\n";
+                   $schema .= "<URL>" . htmlspecialchars($details["manufacturers_url"]) . "</URL>" . "\n";
+                   $schema .= "<URL_CLICK>" . $details["url_clicked"] . "</URL_CLICK>" . "\n";
+                   $schema .= "<DATE_LAST_CLICK>" . $details["date_last_click"] . "</DATE_LAST_CLICK>" . "\n";
                    $schema .= "</MANUFACTURERS_DESCRIPTION>\n";
+
                    $detai_result->MoveNext();
                  }
           
                  $schema .= '</MANUFACTURERS_DATA>' . "\n";
                  echo $schema;
+
                  $cat_result->MoveNext();
                }
                $schema = '</MANUFACTURERS>' . "\n";
         
                echo $schema;
                exit;
+
 //----------------------------------------------------------------------------- 
              case 'orders_export':
 // ----------------------------------------------------------------------------------------
