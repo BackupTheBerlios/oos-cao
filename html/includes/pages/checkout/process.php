@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: process.php,v 1.1 2005/01/11 11:31:43 r23 Exp $
+   $Id: process.php,v 1.2 2005/05/26 22:16:13 r23 Exp $
    ----------------------------------------------------------------------
    Contribution based on:  
 
@@ -70,34 +70,34 @@
   $order_totals = $order_total_modules->process();
 
   $sql_data_array = array('customers_id' => $_SESSION['customer_id'],
-                          'customers_name' => $order->customer['firstname'] . ' ' . $order->customer['lastname'],
-                          'customers_company' => $order->customer['company'],
-                          'customers_street_address' => $order->customer['street_address'],
-                          'customers_suburb' => $order->customer['suburb'],
-                          'customers_city' => $order->customer['city'],
+                          'customers_name' => ucwords($order->customer['firstname'] . ' ' . $order->customer['lastname']),
+                          'customers_company' => ucwords($order->customer['company']),
+                          'customers_street_address' => ucwords($order->customer['street_address']),
+                          'customers_suburb' => ucwords($order->customer['suburb']),
+                          'customers_city' => ucwords($order->customer['city']),
                           'customers_postcode' => $order->customer['postcode'], 
-                          'customers_state' => $order->customer['state'], 
-                          'customers_country' => $order->customer['country']['title'], 
+                          'customers_state' => ucwords($order->customer['state']), 
+                          'customers_country' => ucwords($order->customer['country']['title']), 
                           'customers_telephone' => $order->customer['telephone'], 
                           'customers_email_address' => $order->customer['email_address'],
                           'customers_address_format_id' => $order->customer['format_id'], 
-                          'delivery_name' => $order->delivery['firstname'] . ' ' . $order->delivery['lastname'], 
-                          'delivery_company' => $order->delivery['company'],
-                          'delivery_street_address' => $order->delivery['street_address'], 
-                          'delivery_suburb' => $order->delivery['suburb'], 
-                          'delivery_city' => $order->delivery['city'], 
+                          'delivery_name' => ucwords($order->delivery['firstname'] . ' ' . $order->delivery['lastname']), 
+                          'delivery_company' => ucwords($order->delivery['company']),
+                          'delivery_street_address' => ucwords($order->delivery['street_address']), 
+                          'delivery_suburb' => ucwords($order->delivery['suburb']), 
+                          'delivery_city' => ucwords($order->delivery['city']), 
                           'delivery_postcode' => $order->delivery['postcode'], 
-                          'delivery_state' => $order->delivery['state'], 
-                          'delivery_country' => $order->delivery['country']['title'], 
+                          'delivery_state' => ucwords($order->delivery['state']), 
+                          'delivery_country' => ucwords($order->delivery['country']['title']), 
                           'delivery_address_format_id' => $order->delivery['format_id'], 
-                          'billing_name' => $order->billing['firstname'] . ' ' . $order->billing['lastname'], 
-                          'billing_company' => $order->billing['company'],
-                          'billing_street_address' => $order->billing['street_address'], 
-                          'billing_suburb' => $order->billing['suburb'], 
-                          'billing_city' => $order->billing['city'], 
+                          'billing_name' => ucwords($order->billing['firstname'] . ' ' . $order->billing['lastname']), 
+                          'billing_company' => ucwords($order->billing['company']),
+                          'billing_street_address' => ucwords($order->billing['street_address']), 
+                          'billing_suburb' => ucwords($order->billing['suburb']), 
+                          'billing_city' => ucwords($order->billing['city']), 
                           'billing_postcode' => $order->billing['postcode'], 
-                          'billing_state' => $order->billing['state'], 
-                          'billing_country' => $order->billing['country']['title'], 
+                          'billing_state' => ucwords($order->billing['state']), 
+                          'billing_country' => ucwords($order->billing['country']['title']), 
                           'billing_address_format_id' => $order->billing['format_id'], 
                           'payment_method' => $order->info['payment_method'], 
                           'cc_type' => $order->info['cc_type'], 
@@ -109,7 +109,7 @@
                           'orders_status' => $order->info['order_status'], 
                           'currency' => $order->info['currency'], 
                           'currency_value' => $order->info['currency_value'],
-                          'orders_language' => $_SESSION['language']);
+                          'orders_language' => $language);
 
   oosDBPerform($oosDBTable['orders'], $sql_data_array);
   $insert_id = $db->Insert_ID();
@@ -140,16 +140,11 @@
     // Stock Update - Joao Correia
     if (STOCK_LIMITED == 'true') {
       if (DOWNLOAD_ENABLED == 'true') {
-        $stock_result_raw = "SELECT 
-                                products_quantity, pad.products_attributes_filename 
-                            FROM 
-                                " . $oosDBTable['products'] . " p LEFT JOIN 
-                                " . $oosDBTable['products_attributes'] . " pa 
-                             ON p.products_id = pa.products_id LEFT JOIN 
-                                " . $oosDBTable['products_attributes_download'] . " pad 
-                             ON pa.products_attributes_id = pad.products_attributes_id
-                            WHERE
-                                p.products_id = '" . intval(oosGetPrid($order->products[$i]['id'])) . "'";
+        $stock_result_raw = "SELECT products_quantity, pad.products_attributes_filename 
+                             FROM " . $oosDBTable['products'] . " p LEFT JOIN 
+                                  " . $oosDBTable['products_attributes'] . " pa ON p.products_id = pa.products_id LEFT JOIN 
+                                  " . $oosDBTable['products_attributes_download'] . " pad ON pa.products_attributes_id = pad.products_attributes_id
+                             WHERE p.products_id = '" . intval(oosGetPrid($order->products[$i]['id'])) . "'";
         // Will work with only one option for downloadable products
         // otherwise, we have to build the query dynamically with a loop
         $products_attributes = $order->products[$i]['attributes'];
@@ -206,45 +201,36 @@
       $attributes_exist = '1';
       for ($j=0, $n2=sizeof($order->products[$i]['attributes']); $j<$n2; $j++) {
         if (DOWNLOAD_ENABLED == 'true') {
-          $attributes_result = "SELECT
-                                   popt.products_options_name, poval.products_options_values_name, 
+          $attributes_result = "SELECT popt.products_options_name, poval.products_options_values_name, 
                                    pa.options_values_price, pa.price_prefix, pad.products_attributes_maxdays, 
                                    pad.products_attributes_maxcount , pad.products_attributes_filename 
-                               FROM
-                                   " . $oosDBTable['products_options'] . " popt, 
+                               FROM " . $oosDBTable['products_options'] . " popt, 
                                    " . $oosDBTable['products_options_values'] . " poval, 
                                    " . $oosDBTable['products_attributes'] . " pa LEFT JOIN
-                                   " . $oosDBTable['products_attributes_download'] . " pad
-                                ON pa.products_attributes_id = pad.products_attributes_id
-                               WHERE
-                                   pa.products_id = '" . intval($order->products[$i]['id']) . "' AND
-                                   pa.options_id = '" . intval($order->products[$i]['attributes'][$j]['option_id']) . "' AND
-                                   pa.options_id = popt.products_options_id AND
-                                   pa.options_values_id = '" . intval($order->products[$i]['attributes'][$j]['value_id']) . "' AND 
-                                   pa.options_values_id = poval.products_options_values_id AND 
-                                   popt.products_options_language = '" . $_SESSION['language'] . "' AND 
-                                   poval.products_options_values_language = '" . $_SESSION['language'] . "'";
+                                    " . $oosDBTable['products_attributes_download'] . " pad ON pa.products_attributes_id = pad.products_attributes_id
+                               WHERE pa.products_id = '" . intval($order->products[$i]['id']) . "' 
+                                 AND pa.options_id = '" . intval($order->products[$i]['attributes'][$j]['option_id']) . "' 
+                                 AND pa.options_id = popt.products_options_id 
+                                 AND pa.options_values_id = '" . intval($order->products[$i]['attributes'][$j]['value_id']) . "' 
+                                 AND pa.options_values_id = poval.products_options_values_id 
+                                 AND popt.products_options_language = '" .  oosDBInput($language) . "' 
+                                 AND poval.products_options_values_language = '" .  oosDBInput($language) . "'";
           $attributes = $db->Execute($attributes_result);
         } else {
-          $sql = "SELECT
-                      popt.products_options_name, poval.products_options_values_name, 
-                      pa.options_values_price, pa.price_prefix 
-                  FROM
-                      " . $oosDBTable['products_options'] . " popt, 
+          $sql = "SELECT popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix 
+                  FROM " . $oosDBTable['products_options'] . " popt, 
                       " . $oosDBTable['products_options_values'] . " poval, 
                       " . $oosDBTable['products_attributes'] . " pa 
-                  WHERE
-                      pa.products_id = '" . intval($order->products[$i]['id']) . "' AND
-                      pa.options_id = '" . intval($order->products[$i]['attributes'][$j]['option_id']) . "' AND
-                      pa.options_id = popt.products_options_id AND
-                      pa.options_values_id = '" . intval($order->products[$i]['attributes'][$j]['value_id']) . "' AND
-                      pa.options_values_id = poval.products_options_values_id AND
-                      popt.products_options_language = '" . $_SESSION['language'] . "' AND
-                      poval.products_options_values_language = '" . $_SESSION['language'] . "'";
+                  WHERE pa.products_id = '" . intval($order->products[$i]['id']) . "' 
+                    AND pa.options_id = '" . intval($order->products[$i]['attributes'][$j]['option_id']) . "' 
+                    AND pa.options_id = popt.products_options_id 
+                    AND pa.options_values_id = '" . intval($order->products[$i]['attributes'][$j]['value_id']) . "' 
+                    AND pa.options_values_id = poval.products_options_values_id 
+                    AND popt.products_options_language = '" .  oosDBInput($language) . "' 
+                    AND poval.products_options_values_language = '" .  oosDBInput($language) . "'";
           $attributes = $db->Execute($sql);
         }
         $attributes_values = $attributes->fields;
-        //clr 030714 update insert query.  changing to use values form $order->products for products_options_values.
         $sql_data_array = array('orders_id' => $insert_id,
                                 'orders_products_id' => $order_products_id, 
                                 'products_options' => $attributes_values['products_options_name'],
@@ -263,9 +249,7 @@
           // insert
           oosDBPerform($oosDBTable['orders_products_download'], $sql_data_array);
         }
-        //clr 030714 changing to use values from $orders->products and adding call to oosDecodeSpecialChars()
         $products_ordered_attributes .= "\n\t" . $attributes_values['products_options_name'] . ' ' . oosDecodeSpecialChars($order->products[$i]['attributes'][$j]['value']);
-       //$products_ordered_attributes .= "\n\t" . $attributes_values['products_options_name'] . ' ' . $attributes_values['products_options_values_name'];
       }
     }
 //------insert customer choosen option eof ----
@@ -385,7 +369,7 @@
   unset($_SESSION['payment']);
   unset($_SESSION['comments']);
 
-  $order_total_modules->clear_posts();//ICW ADDED FOR CREDIT CLASS SYSTEM
+  $order_total_modules->clear_posts();
 
   oosRedirect(oosLink($oosModules['checkout'], $oosFilename['checkout_success'], '', 'SSL'));
 

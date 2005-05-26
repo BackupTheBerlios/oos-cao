@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: oos_tables.php,v 1.1 2005/01/10 11:02:07 r23 Exp $
+   $Id: oos_tables.php,v 1.2 2005/05/26 22:16:13 r23 Exp $
    ----------------------------------------------------------------------
    Contribution based on:  
 
@@ -33,6 +33,7 @@
   $oosDBTable['admin_groups'] = $prefix_table . 'admin_groups';
   $oosDBTable['address_book'] = $prefix_table . 'address_book';
   $oosDBTable['address_format'] = $prefix_table . 'address_format';
+  $oosDBTable['adodb_logsql'] = $prefix_table . 'logsql';
   $oosDBTable['affiliate'] = $prefix_table . 'affiliate_affiliate';
   $oosDBTable['affiliate_banners'] = $prefix_table . 'affiliate_banners';
   $oosDBTable['affiliate_banners_history'] = $prefix_table . 'affiliate_banners_history';
@@ -78,6 +79,7 @@
   $oosDBTable['links_description'] = $prefix_table . 'links_description';
   $oosDBTable['links_status'] = $prefix_table . 'links_status';
   $oosDBTable['links_to_link_categories'] = $prefix_table . 'links_to_link_categories';
+  $oosDBTable['maillist'] = $prefix_table . 'maillist';
   $oosDBTable['manual_info'] = $prefix_table . 'manual_info';
   $oosDBTable['manufacturers'] = $prefix_table . 'manufacturers';
   $oosDBTable['manufacturers_info'] = $prefix_table . 'manufacturers_info';

@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: class_order.php,v 1.1 2005/01/11 11:31:43 r23 Exp $
+   $Id: class_order.php,v 1.2 2005/05/26 22:16:13 r23 Exp $
    ----------------------------------------------------------------------
    Contribution based on:  
 
@@ -49,10 +49,12 @@
     }
 
     function query($order_id) {
-      global $db;
 
       $order_id = oosDBPrepareInput($order_id);    
+      
+      $db =& oosDBGetConn();
       $oosDBTable = oosDBGetTables();
+      $language = oosVarPrepForOS($_SESSION['language']);
 
       $sql = "SELECT 
                   customers_id, customers_name, customers_company, customers_street_address, 
@@ -100,7 +102,7 @@
       $sql = "SELECT orders_status_name 
               FROM " . $oosDBTable['orders_status'] . " 
               WHERE orders_status_id = '" . $order['orders_status'] . "' 
-                AND orders_language = '" . $_SESSION['language'] . "'";
+                AND orders_language = '" .  oosDBInput($language) . "'";
       $order_status_result = $db->Execute($sql);
       $order_status = $order_status_result->fields;
 
@@ -203,11 +205,15 @@
     }
 
     function cart() {
-      global $currency, $currencies, $db;
+      global $currency, $currencies;
 
       $this->content_type = $_SESSION['cart']->get_content_type();
       
+      $db =& oosDBGetConn();
       $oosDBTable = oosDBGetTables();     
+      $language = oosVarPrepForOS($_SESSION['language']);
+
+      
       $sql = "SELECT 
                   c.customers_firstname, c.customers_lastname, c.customers_telephone, c.customers_email_address, 
                   ab.entry_company, ab.entry_street_address, ab.entry_suburb, ab.entry_postcode, ab.entry_city, 
@@ -274,7 +280,10 @@
                           'cc_cvv' => (isset($GLOBALS['cc_cvv']) ? $GLOBALS['cc_cvv'] : ''),
                           'shipping_method' => $_SESSION['shipping']['title'],
                           'shipping_cost' => $_SESSION['shipping']['cost'],
-                          'comments' => (isset($_SESSION['comments']) ? $_SESSION['comments'] : ''));
+                          'comments' => (isset($_SESSION['comments']) ? $_SESSION['comments'] : ''),
+                          'shipping_class' =>  ( (strpos($shipping['id'],'_') > 0) ?  substr( strrev( strchr(strrev($shipping['id']),'_') ),0,-1) : $shipping['id'] ),
+                          'payment_class' => $_SESSION['payment'],
+                          );
 
       if (isset($GLOBALS['payment']) && is_object($GLOBALS['payment'])) {
         $this->info['payment_method'] = $GLOBALS['payment']->title;
@@ -355,8 +364,8 @@
                         pa.options_id = popt.products_options_id AND 
                         pa.options_values_id = '" . oosDBInput($value) . "' AND 
                         pa.options_values_id = poval.products_options_values_id AND 
-                        popt.products_options_language = '" . $_SESSION['language'] . "' AND 
-                        poval.products_options_values_language = '" . $_SESSION['language'] . "'";
+                        popt.products_options_language = '" .  oosDBInput($language) . "' AND 
+                        poval.products_options_values_language = '" .  oosDBInput($language) . "'";
             $attributes_result = $db->Execute($sql);
             $attributes = $attributes_result->fields;
             if ($value == PRODUCTS_OPTIONS_VALUE_TEXT_ID){
