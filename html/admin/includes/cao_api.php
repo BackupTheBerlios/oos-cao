@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_api.php,v 1.1 2005/01/07 09:29:28 r23 Exp $
+   $Id: cao_api.php,v 1.2 2005/06/02 00:24:01 r23 Exp $
    ----------------------------------------------------------------------
    Based on:
    
@@ -59,6 +59,8 @@
   if (!oosDBInit()) {
     die('Unable to connect to database server!');
   }
+  
+  $db =& oosDBGetConn();
 
 // set application wide parameters
   $sql = "SELECT configuration_key AS cfgKey, configuration_value AS cfgValue 
