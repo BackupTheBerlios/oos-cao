@@ -1,9 +1,3 @@
-/* ----------------------------------------------------------------------
-   $Id: cao_install.txt,v 1.2 2005/01/05 11:27:20 r23 Exp $
-   ----------------------------------------------------------------------
-   Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
-
 /*******************************************************************************************
 *                                                                                          *
 *  CAO-Faktura für Windows Version 1.2                                                     *
@@ -27,8 +21,8 @@
 *                                                                                          *
 *  Programm     : CAO-Faktura                                                              *
 *  Modul        : OSC-CAO_install.txt                                                      *
-*  Stand        : 09.08.2003                                                               *
-*  Version      : 0.24                                                                     *
+*  Stand        : 21.10.2005                                                               *
+*  Version      : 0.27                                                                     *
 *  Beschreibung : Updateanweisungen für OSC zum Export nach CAO                            *
 *                                                                                          *
 *  based on:                                                                               *
@@ -43,53 +37,61 @@
 *  - 20.07.2003 HS Änderungen für OSC für                                                  *
 *  -    12.2004 RV Erweiterungen für OSCommerce und CAO 1.2.6.1                            *
 *  - 11.12.2004 JP Umgeschrieben für XTC                                                   *
+*  -    06.2004 JP und KL Erweitert für XTC 3.x                                            *
+*  - 20.10.2005 JP Anpassungen für neue Scripte / XTC bis Version 3.0.4                    *
+*  - 21.10.2005 JP Änderungen für Paßwortübergabe                                          *
 *******************************************************************************************/
 
-Ich habe die hier beschriebenen Änderungen auf der Basis eines XTC-Shops 
-Version 2.0 RC1.2 gemacht. Ob dies So auch mit anderen Versionen zusammenarbeiten 
-kann ich nicht sagen.
 
-Achtung : Die Scripte sind nicht vollständig getestet !!!
+Getestet mit Versionen 2x, 3.0.2 und 3.0.3 und 3.0.4
+
 Feedback ist willkommen.
 
 
-cao_import.php und xml_export.php in den Adminordner kopieren
+Als erstes sollte der XML-Parser (Microsoft ™ MSXML 4.0 Service Pack 2 / Deutsch) 
+heruntergeladen und installiert werden. 
+Wenn dies nicht erfolgt ist erhält man in CAO die Fehlermeldung "Klasse nicht registriert".
 
-In der xml_export am Anfang die speziellen Order_total Klassen anpassen, 
+Download unter : 
+http://download.microsoft.com/download/5/f/d/5fda3c88-bd50-43cf-a845-73614e974e91/msxmlger.msi
+
+
+Jetzt sollten die 2 Scripte cao_xtc.php und cao_xtc_functions.php in den Export-Ordner des Shops kopiert werden.
+
+
+Nun sollte die Funktion des Scriptes festgestellt werden. 
+Hierzu im Browser das Script aufrufen :
+
+http://www.deinewebseite.de/shop/export/cao_xtc.php
+
+Es sollte dann folgende Ausgabe folgen :
+
+CAO-Faktura - xt:Commerce Shopanbindung
+
+
+Aufruf des Scriptes mit
+/xtc-shop/export/cao_xtc.php?user=ADMIN-EMAIL&password=ADMIN-PASSWORD-IM-KLARTEXT 
+
+
+Rufen Sie anschließend das Script mit der EMail-Adresse des Admins und dem Paßwort auf.
+Es sollte eine HTML-Seite mit diversen Links angezeigt werden.
+
+Klicken Sie jetzt auf den Link "MySQL-Tabellen aktualisieren".
+Jetzt werden die benötigten Änderungen an der MySQL-Datenbank des Shops ausgeführt. 
+Diese Aktion kann beliebig oft wiederholt werden, Daten gehen hierbei nicht verloren.
+
+
+Nachdem nun die Funktion des Scriptes sichergestellt ist, 
+muß der Shop noch an diversen Stellen angepaßt werden.
+
+
+In der Datei cao_xtc.php am Anfang die speziellen Order_total Klassen anpassen, 
 bzw erweitern (also eigene verwendete hinzufügen).
 Dies ist nur notwendig wenn ihr spezielle Contribs im Shop installiert habt.
 
-Folgende Anweisung in der Datenbank ausführen (z.B. via phpMyAdmin):
-
-ALTER TABLE `orders` 
- ADD `payment_class` VARCHAR( 32 ) NOT NULL ,
- ADD `shipping_method` VARCHAR( 32 ) NOT NULL,
- ADD `shipping_class` VARCHAR( 32 ) NOT NULL ;
-
-ALTER TABLE `orders` 
- ADD `billing_country_iso_code_2` CHAR( 2 ) NOT NULL AFTER `billing_country` ;
-
-ALTER TABLE `orders` 
- ADD `delivery_country_iso_code_2` CHAR( 2 ) NOT NULL AFTER `delivery_country` ;
-
-ALTER TABLE `orders`
- ADD `billing_firstname` VARCHAR( 32 ) NOT NULL AFTER `billing_name` ,
- ADD `billing_lastname` VARCHAR( 32 ) NOT NULL AFTER `billing_firstname` ;
-
-ALTER TABLE `orders`
- ADD `delivery_firstname` VARCHAR( 32 ) NOT NULL AFTER `delivery_name` ,
- ADD `delivery_lastname` VARCHAR( 32 ) NOT NULL AFTER `delivery_firstname` ;
-
-ALTER TABLE `orders`
- CHANGE `payment_method` `payment_method` VARCHAR( 255 ) NOT NULL;
-
-ALTER TABLE `orders`
- CHANGE `shipping_method` `shipping_method` VARCHAR( 255 ) NOT NULL;
 
 
-Wenn Ihr den Logger verwenden wollt, dann müßt ihr auch die beiliegende Datei 
-cao_log.sql ausführen.
-
+Bis einschließlich XTC 3.0.3 ist folgendes zu ändern:
 
 catalog/checkout_process.php:
 wie folgt erweitern:
@@ -116,7 +118,7 @@ ca Zeile 103:
                           'customers_address_format_id' => $order->customer['format_id'],
                           'delivery_name' => $order->delivery['firstname'] . ' ' . $order->delivery['lastname'],
                           'delivery_firstname' => $order->delivery['firstname'], //JAN 
-	                       'delivery_lastname' => $order->delivery['lastname'], //JAN										
+	                  'delivery_lastname' => $order->delivery['lastname'], //JAN										
                           'delivery_company' => $order->delivery['company'],
                           'delivery_street_address' => $order->delivery['street_address'],
                           'delivery_suburb' => $order->delivery['suburb'],
@@ -164,6 +166,7 @@ ca Zeile 103:
 Die Zeilen die am Ende mit //JAN gekennzeichnet sind, sind hinzuzufügen.
 
 
+Diese Änderung ist bei allen XTC-Versionen durchzuführen :
 
 catalog/includes/classes/order.php
 wie folgt erweitern:
@@ -193,4 +196,31 @@ ab ca Zeile 220  function cart() {
                           );  
 
 
+
+Nun sind im CAO die Einstellungen für den Shop einzutragen bzw. Anzupassen :
+
+Im Menü Datei->Shopeinstellungen auf der Seite URL/Proxy ist sowohl bei "URL zum Importscript" als auch bei "URL zum Updatescript" die Datei cao_xtc.php mit vollem Pfad einzutragen.
+
+Also z.b. : http://www.deinewebsite.de/shop/export/cao_xtc.php
+
+Im Feld Benutzername ist die EMail-Adresse des Administrators des Shops einzutragen.
+Beim Paßwort das Paßwort des Admins.
+
+Jetzt noch auf den Button Speichern klicken um die Einstellungen zu speichern.
+
+Prüfen Sie auch auf der Seite "Allgemein" das dort der richtige Shop in der Drop-Down-Box "Software" ausgewählt ist. Auch hier müssen Sie auf Speichern klicken !
+
+
+Nachdem nun die groben Einstellungen vollständig sind, können Sie in der linken Navigation auf Tools->Shoptransfer wechseln und dort auf der Seite "Transfer-Log" unten links auf den Button "Lese Script-Versionen" klicken. Hier sollte Ihnen jetzt die aktuelle Versin angezeigt werden.
+
+
+
+Mögliche Fehlernummern beim Testen bzw. lesen der Scriptversion 
+
+Code 	Beschreibung
+------------------------------------------------------------------------------
+105	Benutzername (EMail) existiert im Shop nicht 
+106	Benutzer ist kein Admin im Shop 
+107	Benutzer darf keinen XML-Export ausführen (siehe Admin-Rechte im Shop) 
+108	Paßwort stimmt nicht
 

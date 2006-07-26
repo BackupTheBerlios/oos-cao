@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: oos_tables.php,v 1.3 2006/07/26 05:02:44 r23 Exp $
+   $Id: oos_tables.php,v 1.4 2006/07/26 05:43:54 r23 Exp $
 
    OOS [OSIS Online Shop]
    http://www.oos-shop.de/
@@ -138,4 +138,8 @@
   $oosDBTable['zones_to_geo_zones'] = $prefix_table . 'zones_to_geo_zones';
   $oosDBTable['whos_online'] = $prefix_table . 'whos_online';
   $oosDBTable['zones'] = $prefix_table . 'zones';
+
+  // CAO Faktura
+  $oosDBTable['cao_log'] = $prefix_table . 'cao_log';
+
 ?>

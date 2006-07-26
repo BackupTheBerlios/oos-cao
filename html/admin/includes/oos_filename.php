@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: oos_filename.php,v 1.2 2006/07/26 05:02:44 r23 Exp $
+   $Id: oos_filename.php,v 1.3 2006/07/26 05:43:54 r23 Exp $
 
    OOS [OSIS Online Shop]
    http://www.oos-shop.de/
@@ -22,7 +22,7 @@
   /** ensure this file is being included by a parent file */
   defined( 'OOS_VALID_MOD' ) or die( 'Direct Access to this location is not allowed.' );
 
-  $aFilename = array(); 
+  $aFilename = array();
 
   $prefix_filename = '';
   if (!$prefix_filename == '') $prefix_filename =  $prefix_filename . '_';
@@ -136,9 +136,10 @@
   $aFilename['up_sell_products'] = 'up_sell_products.php';
   $aFilename['zones'] = $prefix_filename . 'zones.php';
 
+  // CAO Faktura
+  $aFilename['cao_oos'] = $prefix_filename . 'cao_oos.php';
+
   //catalogLink
-
-
   $prefix_modules = '';
   if (!$prefix_modules == '') $prefix_modules =  $prefix_modules . '_';
 
@@ -163,10 +164,10 @@
   $oosCatalogFilename['default'] = $prefix_catalog_filename . 'main';
   $oosCatalogFilename['gv_redeem'] = $prefix_catalog_filename . 'redeem';
   $oosCatalogFilename['ticket_view'] = $prefix_catalog_filename . 'view';
-  $oosCatalogFilename['product_info'] = $prefix_catalog_filename . 'info'; 
+  $oosCatalogFilename['product_info'] = $prefix_catalog_filename . 'info';
   $oosCatalogFilename['login_admin'] = $prefix_catalog_filename . 'login';
   $oosCatalogFilename['create_account_admin'] = $prefix_catalog_filename . 'create_account';
-  $oosCatalogFilename['wishlist'] = $prefix_catalog_filename . 'wishlist'; 
+  $oosCatalogFilename['wishlist'] = $prefix_catalog_filename . 'wishlist';
   $oosCatalogFilename['user_login'] = $prefix_catalog_filename . 'login';
 
   $oosCatalogFilename['affiliate_help1'] = $prefix_catalog_filename . 'help1';
