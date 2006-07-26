@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_oos.php,v 1.2 2006/07/26 05:46:49 r23 Exp $
+   $Id: cao_oos.php,v 1.3 2006/07/26 06:16:43 r23 Exp $
 
    Based on:
 
@@ -164,8 +164,8 @@ if ((isset($_POST['user']))and(isset($_POST['password'])))
 {
    $user=$_POST['user'];
    $password=$_POST['password'];
-} 
-  else 
+}
+  else
 {
    $user=$_GET['user'];
    $password=$_GET['password'];
@@ -186,7 +186,7 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
   else
 {
   require ('cao_xtc_functions.php');
-  
+
   // security  1.check if admin user with this mailadress exits, and got access to xml-export
   //           2.check if pasword = true
   if (column_exists ('admin_access','xml_export')==false)
@@ -194,7 +194,7 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
      xtc_db_query('ALTER TABLE admin_access ADD xml_export INT(1)  DEFAULT "0";');
      xtc_db_query('UPDATE admin_access SET xml_export= 1 WHERE customers_id=\'1\';');
   }
- 
+
   $check_customer_query=xtc_db_query("select customers_id,
                                       customers_status,
                                       customers_password
@@ -204,8 +204,8 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
   if (!xtc_db_num_rows($check_customer_query))
   {
     SendXMLHeader ();
-    print_xml_status (105, $_POST['action'], 'WRONG LOGIN', '', '', '');	 
-    exit; 
+    print_xml_status (105, $_POST['action'], 'WRONG LOGIN', '', '', '');
+    exit;
   }
     else
   {
@@ -214,7 +214,7 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
     if ($check_customer['customers_status']!='0') 
     {
       SendXMLHeader ();
-      print_xml_status (106, $_POST['action'], 'WRONG LOGIN', '', '', '');	  
+      print_xml_status (106, $_POST['action'], 'WRONG LOGIN', '', '', '');
       exit;
     }
 
@@ -231,199 +231,199 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
       exit;
     }
 
-    if (!( ($check_customer['customers_password'] == $password) or 
+    if (!( ($check_customer['customers_password'] == $password) or
              ($check_customer['customers_password'] == md5($password)) or
              ($check_customer['customers_password'] == md5(substr($password,2,40)))
        ))
     {
       SendXMLHeader ();
-      print_xml_status (108, $_POST['action'], 'WRONG PASSWORD', '', '', '');	  	
+      print_xml_status (108, $_POST['action'], 'WRONG PASSWORD', '', '', '');
       exit;
     }
   }
 }
 
 
-if ($_SERVER['REQUEST_METHOD']=='GET') 
+if ($_SERVER['REQUEST_METHOD']=='GET')
 {
-  switch ($_GET['action']) 
+  switch ($_GET['action'])
   {
      case 'version':        // Ausgabe Scriptversion
-     
+
        SendXMLHeader ();
        SendScriptVersion ();
-       exit; 
-     
+       exit;
+
      case 'categories_export':
-     
+
        SendXMLHeader ();
        SendCategories ();
        exit;
-     
+
      case 'manufacturers_export':
-     
+
        SendXMLHeader ();
        SendManufacturers ();
        exit;
-     
+
      case 'orders_export':
-     
+
        SendXMLHeader ();
        SendOrders ();
        exit;
-     
+
      case 'products_export':
-     
+
        SendXMLHeader ();
        SendProducts ();
        exit;
-     
+
      case 'customers_export':
-     
+
        SendXMLHeader ();
        SendCustomers ();
        exit;
-     
+
      case 'customers_newsletter_export':
-     
+
        SendXMLHeader ();
        SendCustomersNewsletter ();
        exit;
-     
+
      case 'config_export':
-     
+
        SendXMLHeader ();
        SendShopConfig ();
        exit;
-       
+
      case 'update_tables':
-     
+
        UpdateTables ();
        exit;
-       
+
      default :
-       
+
        ShowHTMLMenu ();
        exit;
-       
-   } // End Case   
-} // End Method POST
- else 
+
+   }
+}
+ else
 {
-  if ($_SERVER['REQUEST_METHOD']=='POST') 
+  if ($_SERVER['REQUEST_METHOD']=='POST')
   {
-    switch ($_POST['action']) 
+    switch ($_POST['action'])
     {
       case 'manufacturers_image_upload':
-     
+
         SendXMLHeader ();
         ManufacturersImageUpload ();
         exit;
-     
+
      case 'categories_image_upload':
-     
+
         SendXMLHeader ();
         CategoriesImageUpload ();
         exit;
-     
+
      case 'products_image_upload':
-     
+
         SendXMLHeader ();
         ProductsImageUpload ();
-        exit;   
-        
+        exit;
+
      case 'products_image_upload_med':
-     
+
         SendXMLHeader ();
         ProductsImageUploadMed ();
-        exit;   
-        
+        exit;
+
      case 'products_image_upload_large':
-     
+
         SendXMLHeader ();
         ProductsImageUploadLarge ();
-        exit;   
-        
+        exit;
+
      case 'manufacturers_update':
-     
+
         SendXMLHeader ();
         ManufacturersUpdate ();
-        exit;   
-        
+        exit;
+
       case 'manufacturers_erase':
-     
+
         SendXMLHeader ();
         ManufacturersErase ();
-        exit;   
-        
+        exit;
+
       case 'products_update':
-        
+
         SendXMLHeader ();
         ProductsUpdate ();
         exit;
-        
+
       case 'products_erase':
-        
+
         SendXMLHeader ();
         ProductsErase ();
         exit;
-        
+
       case 'products_specialprice_update':
-        
+
         SendXMLHeader ();
         ProductsSpecialPriceUpdate ();
         exit;
-        
-      case 'products_specialprice_erase':  
-        
+
+      case 'products_specialprice_erase':
+
         SendXMLHeader ();
         ProductsSpecialPriceErase ();
         exit;
-        
+
       case 'categories_update':
-        
+
         SendXMLHeader ();
         CategoriesUpdate ();
         exit;
-        
+
       case 'categories_erase':
-        
-        SendXMLHeader ();  
+
+        SendXMLHeader ();
         CategoriesErase ();
         exit;
-        
+
       case 'prod2cat_update':
 
-        SendXMLHeader ();  
+        SendXMLHeader ();
         Prod2CatUpdate ();
         exit;
 
       case 'prod2cat_erase':
 
-        SendXMLHeader ();  
+        SendXMLHeader ();
         Prod2CatErase ();
         exit;
-        
+
       case 'order_update':
-      
-        SendXMLHeader ();  
+
+        SendXMLHeader ();
         OrderUpdate ();
         exit;
-        
+
       case 'customers_update':
-      
-        SendXMLHeader ();  
+
+        SendXMLHeader ();
         CustomersUpdate ();
         exit;
-      
+
       case 'customers_erase':
-      
-        SendXMLHeader ();  
+
+        SendXMLHeader ();
         CustomersErase ();
         exit;
-          
-    } // End Case
-  }  // End Method POST
+
+    }
+  }
 }
 
 ?>
