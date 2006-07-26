@@ -1,15 +1,11 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: oos_tables.php,v 1.2 2005/05/26 22:16:13 r23 Exp $
-   ----------------------------------------------------------------------
-   Contribution based on:  
+   $Id: oos_tables.php,v 1.3 2006/07/26 05:02:44 r23 Exp $
 
-   File: oos_tables.php,v 1.22 2004/08/19 09:35:09 vexoid 
-   ----------------------------------------------------------------------
    OOS [OSIS Online Shop]
    http://www.oos-shop.de/
 
-   Copyright (c) 2003 - 2004 by the OOS Development Team.
+   Copyright (c) 2003 - 2006 by the OOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
@@ -22,6 +18,9 @@
    ----------------------------------------------------------------------
    Released under the GNU General Public License
    ---------------------------------------------------------------------- */
+
+  /** ensure this file is being included by a parent file */
+  defined( 'OOS_VALID_MOD' ) or die( 'Direct Access to this location is not allowed.' );
 
   $prefix_table = OOS_DB_PREFIX;
 
@@ -115,7 +114,10 @@
   $oosDBTable['products_status'] = $prefix_table . 'products_status';
   $oosDBTable['products_to_categories'] = $prefix_table . 'products_to_categories';
   $oosDBTable['products_to_master'] = $prefix_table . 'products_to_master';
+  $oosDBTable['products_up_sell'] = $prefix_table . 'products_up_sell';
   $oosDBTable['products_xsell'] = $prefix_table . 'products_xsell';
+  $oosDBTable['recovercartsales'] = $prefix_table . 'recovercartsales';
+  $oosDBTable['referer'] = $prefix_table . 'referer';
   $oosDBTable['reviews'] = $prefix_table . 'reviews';
   $oosDBTable['reviews_description'] = $prefix_table . 'reviews_description';
   $oosDBTable['search_queries'] = $prefix_table . 'search_queries';
@@ -136,8 +138,4 @@
   $oosDBTable['zones_to_geo_zones'] = $prefix_table . 'zones_to_geo_zones';
   $oosDBTable['whos_online'] = $prefix_table . 'whos_online';
   $oosDBTable['zones'] = $prefix_table . 'zones';
-  
-  // CAO Faktura
-  $oosDBTable['cao_log'] = $prefix_table . 'cao_log';
-  
 ?>

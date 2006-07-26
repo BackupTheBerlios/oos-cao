@@ -1,19 +1,15 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: class_order.php,v 1.2 2005/05/26 22:16:13 r23 Exp $
-   ----------------------------------------------------------------------
-   Contribution based on:  
+   $Id: class_order.php,v 1.3 2006/07/26 05:02:44 r23 Exp $
 
-   File: class_order.php,v 1.2 2005/01/11 10:07:16 r23 
-   ----------------------------------------------------------------------
    OOS [OSIS Online Shop]
    http://www.oos-shop.de/
 
-   Copyright (c) 2003 - 2004 by the OOS Development Team.
+   Copyright (c) 2003 - 2005 by the OOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
-   File: order.php,v 1.29 2003/02/11 21:13:39 dgw_ 
+   File: order.php,v 1.29 2003/02/11 21:13:39 dgw_
    ----------------------------------------------------------------------
    osCommerce, Open Source E-Commerce Solutions
    http://www.oscommerce.com
@@ -41,7 +37,7 @@
       $this->customer = array();
       $this->delivery = array();
 
-      if (oosNotNull($order_id)) {
+      if (oos_is_not_null($order_id)) {
         $this->query($order_id);
       } else {
         $this->cart();
@@ -50,33 +46,33 @@
 
     function query($order_id) {
 
-      $order_id = oosDBPrepareInput($order_id);    
-      
+      $order_id = oosDBPrepareInput($order_id);
+      $nLanguageID = isset($_SESSION['language_id']) ? $_SESSION['language_id']+0 : 1;
+
       $db =& oosDBGetConn();
       $oosDBTable = oosDBGetTables();
-      $language = oosVarPrepForOS($_SESSION['language']);
 
-      $sql = "SELECT 
-                  customers_id, customers_name, customers_company, customers_street_address, 
-                  customers_suburb, customers_city, customers_postcode, customers_state, 
-                  customers_country, customers_telephone, customers_email_address, 
-                  customers_address_format_id, delivery_name, delivery_company, 
-                  delivery_street_address, delivery_suburb, delivery_city, delivery_postcode, 
-                  delivery_state, delivery_country, delivery_address_format_id, billing_name, 
-                  billing_company, billing_street_address, billing_suburb, billing_city, 
-                  billing_postcode, billing_state, billing_country, billing_address_format_id, 
-                  payment_method, cc_type, cc_owner, cc_number, cc_expires, currency, currency_value, 
-                  date_purchased, orders_status, last_modified 
+      $sql = "SELECT
+                  customers_id, customers_name, customers_company, customers_street_address,
+                  customers_suburb, customers_city, customers_postcode, customers_state,
+                  customers_country, customers_telephone, customers_email_address,
+                  customers_address_format_id, delivery_name, delivery_company,
+                  delivery_street_address, delivery_suburb, delivery_city, delivery_postcode,
+                  delivery_state, delivery_country, delivery_address_format_id, billing_name,
+                  billing_company, billing_street_address, billing_suburb, billing_city,
+                  billing_postcode, billing_state, billing_country, billing_address_format_id,
+                  payment_method, cc_type, cc_owner, cc_number, cc_expires, currency, currency_value,
+                  date_purchased, orders_status, last_modified
               FROM 
-                  " . $oosDBTable['orders'] . " 
+                  " . $oosDBTable['orders'] . "
               WHERE 
-                  orders_id = '" . oosDBInput($order_id) . "'";
+                  orders_id = '" . intval($order_id) . "'";
       $order_result = $db->Execute($sql);
       $order = $order_result->fields;
  
-      $sql = "SELECT title, text 
-              FROM " . $oosDBTable['orders_total'] . " 
-              WHERE orders_id = '" . oosDBInput($order_id) . "' 
+      $sql = "SELECT title, text
+              FROM " . $oosDBTable['orders_total'] . "
+              WHERE orders_id = '" . intval($order_id) . "'
               ORDER BY sort_order";
       $totals_result = $db->Execute($sql);
       while ($totals = $totals_result->fields) {
@@ -84,25 +80,25 @@
                                 'text' => $totals['text']);
         $totals_result->MoveNext();
       }
-      
+
       $sql = "SELECT text 
-              FROM " . $oosDBTable['orders_total'] . " 
-              WHERE orders_id = '" . oosDBInput($order_id) . "' 
+              FROM " . $oosDBTable['orders_total'] . "
+              WHERE orders_id = '" . intval($order_id) . "'
                 AND class = 'ot_total'";
       $order_total_result = $db->Execute($sql);
       $order_total = $order_total_result->fields;
-      
+
       $sql = "SELECT title 
-              FROM " . $oosDBTable['orders_total'] . " 
-              WHERE orders_id = '" . oosDBInput($order_id) . "' 
+              FROM " . $oosDBTable['orders_total'] . "
+              WHERE orders_id = '" . intval($order_id) . "'
                 AND class = 'ot_shipping'";
       $shipping_method_result = $db->Execute($sql);
       $shipping_method = $shipping_method_result->fields;
-      
+
       $sql = "SELECT orders_status_name 
-              FROM " . $oosDBTable['orders_status'] . " 
-              WHERE orders_status_id = '" . $order['orders_status'] . "' 
-                AND orders_language = '" .  oosDBInput($language) . "'";
+              FROM " . $oosDBTable['orders_status'] . "
+              WHERE orders_status_id = '" . $order['orders_status'] . "'
+                AND orders_languages_id = '" .  intval($nLanguageID) . "'";
       $order_status_result = $db->Execute($sql);
       $order_status = $order_status_result->fields;
 
@@ -157,15 +153,15 @@
                              'format_id' => $order['billing_address_format_id']);
 
       $index = 0;
-      
+
       $sql = "SELECT 
                   orders_products_id, products_id, products_name, products_model,
                   products_ean, products_serial_number, products_price, products_tax,
                   products_quantity, final_price 
               FROM 
-                  " . $oosDBTable['orders_products'] . " 
+                  " . $oosDBTable['orders_products'] . "
               WHERE 
-                  orders_id = '" . oosDBInput($order_id) . "'";
+                  orders_id = '" . intval($order_id) . "'";
       $orders_products_result = $db->Execute($sql);
       while ($orders_products = $orders_products_result->fields) {
         $this->products[$index] = array('qty' => $orders_products['products_quantity'],
@@ -179,9 +175,9 @@
                                         'final_price' => $orders_products['final_price']);
 
         $subindex = 0;
-        $sql = "SELECT products_options, products_options_values, options_values_price, price_prefix 
-                FROM " . $oosDBTable['orders_products_attributes'] . " 
-                WHERE orders_id = '" . oosDBInput($order_id) . "' 
+        $sql = "SELECT products_options, products_options_values, options_values_price, price_prefix
+                FROM " . $oosDBTable['orders_products_attributes'] . "
+                WHERE orders_id = '" . intval($order_id) . "'
                   AND orders_products_id = '" . $orders_products['orders_products_id'] . "'";
         $attributes_result = $db->Execute($sql);
         if ($attributes_result->RecordCount()) {
@@ -199,36 +195,35 @@
         $this->info['tax_groups']["{$this->products[$index]['tax']}"] = '1';
 
         $index++;
-        
+
         $orders_products_result->MoveNext();
       }
     }
 
     function cart() {
-      global $currency, $currencies;
+      global $oCurrencies;
 
       $this->content_type = $_SESSION['cart']->get_content_type();
-      
-      $db =& oosDBGetConn();
-      $oosDBTable = oosDBGetTables();     
-      $language = oosVarPrepForOS($_SESSION['language']);
+      $nLanguageID = isset($_SESSION['language_id']) ? $_SESSION['language_id']+0 : 1;
 
-      
+      $db =& oosDBGetConn();
+      $oosDBTable = oosDBGetTables();
+
       $sql = "SELECT 
                   c.customers_firstname, c.customers_lastname, c.customers_telephone, c.customers_email_address, 
                   ab.entry_company, ab.entry_street_address, ab.entry_suburb, ab.entry_postcode, ab.entry_city, 
                   ab.entry_zone_id, z.zone_name, co.countries_id, co.countries_name, co.countries_iso_code_2, 
                   co.countries_iso_code_3, co.address_format_id, ab.entry_state 
               FROM 
-                  " . $oosDBTable['customers'] . " c, 
+                  " . $oosDBTable['customers'] . " c,
                   " . $oosDBTable['address_book'] . " ab LEFT JOIN
                   " . $oosDBTable['zones'] . " z 
                ON (ab.entry_zone_id = z.zone_id) LEFT JOIN
-                  " . $oosDBTable['countries'] . " co 
-               ON (ab.entry_country_id = co.countries_id) 
+                  " . $oosDBTable['countries'] . " co
+               ON (ab.entry_country_id = co.countries_id)
               WHERE 
-                  c.customers_id = '" . intval($_SESSION['customer_id']) . "' AND 
-                  ab.customers_id = '" . intval($_SESSION['customer_id']) . "' AND 
+                  c.customers_id = '" . intval($_SESSION['customer_id']) . "' AND
+                  ab.customers_id = '" . intval($_SESSION['customer_id']) . "' AND
                   c.customers_default_address_id = ab.address_book_id";
       $customer_address_result = $db->Execute($sql);
       $customer_address = $customer_address_result->fields;
@@ -239,30 +234,30 @@
                   ab.entry_country_id, c.countries_id, c.countries_name, c.countries_iso_code_2, 
                   c.countries_iso_code_3, c.address_format_id, ab.entry_state 
               FROM 
-                  " . $oosDBTable['address_book'] . " ab LEFT JOIN 
-                  " . $oosDBTable['zones'] . " z 
-               ON (ab.entry_zone_id = z.zone_id) LEFT JOIN 
+                  " . $oosDBTable['address_book'] . " ab LEFT JOIN
+                  " . $oosDBTable['zones'] . " z
+               ON (ab.entry_zone_id = z.zone_id) LEFT JOIN
                   " . $oosDBTable['countries'] . " c ON
-                  (ab.entry_country_id = c.countries_id) 
+                  (ab.entry_country_id = c.countries_id)
               WHERE 
-                  ab.customers_id = '" . intval($_SESSION['customer_id']) . "' AND 
+                  ab.customers_id = '" . intval($_SESSION['customer_id']) . "' AND
                   ab.address_book_id = '" . intval($_SESSION['sendto']) . "'";
       $shipping_address_result = $db->Execute($sql);
       $shipping_address = $shipping_address_result->fields;
-  
+
       $sql = "SELECT 
                   ab.entry_firstname, ab.entry_lastname, ab.entry_company, ab.entry_street_address, 
                   ab.entry_suburb, ab.entry_postcode, ab.entry_city, ab.entry_zone_id, z.zone_name, 
                   ab.entry_country_id, c.countries_id, c.countries_name, c.countries_iso_code_2, 
                   c.countries_iso_code_3, c.countries_moneybookers, c.address_format_id, ab.entry_state 
               FROM
-                  " . $oosDBTable['address_book'] . " ab LEFT JOIN 
-                  " . $oosDBTable['zones'] . " z 
-               ON (ab.entry_zone_id = z.zone_id) LEFT JOIN 
+                  " . $oosDBTable['address_book'] . " ab LEFT JOIN
+                  " . $oosDBTable['zones'] . " z
+               ON (ab.entry_zone_id = z.zone_id) LEFT JOIN
                   " . $oosDBTable['countries'] . " c ON
-                  (ab.entry_country_id = c.countries_id) 
+                  (ab.entry_country_id = c.countries_id)
               WHERE 
-                  ab.customers_id = '" . intval($_SESSION['customer_id']) . "' AND 
+                  ab.customers_id = '" . intval($_SESSION['customer_id']) . "' AND
                   ab.address_book_id = '" . intval($_SESSION['billto']) . "'";
       $billing_address_result = $db->Execute($sql);
       $billing_address = $billing_address_result->fields;
@@ -270,8 +265,8 @@
       $class =& $_SESSION['payment'];
 
       $this->info = array('order_status' => DEFAULT_ORDERS_STATUS_ID,
-                          'currency' => $currency,
-                          'currency_value' => $currencies->currencies[$currency]['value'],
+                          'currency' => $_SESSION['currency'],
+                          'currency_value' => $oCurrencies->currencies[$_SESSION['currency']]['value'],
                           'payment_method' => $GLOBALS[$class]->title,
                           'cc_type' => (isset($GLOBALS['cc_type']) ? $GLOBALS['cc_type'] : ''),
                           'cc_owner' => (isset($GLOBALS['cc_owner']) ? $GLOBALS['cc_owner'] : ''),
@@ -300,7 +295,7 @@
                               'suburb' => $customer_address['entry_suburb'],
                               'city' => $customer_address['entry_city'],
                               'postcode' => $customer_address['entry_postcode'],
-                              'state' => ((oosNotNull($customer_address['entry_state'])) ? $customer_address['entry_state'] : $customer_address['zone_name']),
+                              'state' => ((oos_is_not_null($customer_address['entry_state'])) ? $customer_address['entry_state'] : $customer_address['zone_name']),
                               'zone_id' => $customer_address['entry_zone_id'],
                               'country' => array('id' => $customer_address['countries_id'], 'title' => $customer_address['countries_name'], 'iso_code_2' => $customer_address['countries_iso_code_2'], 'iso_code_3' => $customer_address['countries_iso_code_3']),
                               'format_id' => $customer_address['address_format_id'],
@@ -314,7 +309,7 @@
                               'suburb' => $shipping_address['entry_suburb'],
                               'city' => $shipping_address['entry_city'],
                               'postcode' => $shipping_address['entry_postcode'],
-                              'state' => ((oosNotNull($shipping_address['entry_state'])) ? $shipping_address['entry_state'] : $shipping_address['zone_name']),
+                              'state' => ((oos_is_not_null($shipping_address['entry_state'])) ? $shipping_address['entry_state'] : $shipping_address['zone_name']),
                               'zone_id' => $shipping_address['entry_zone_id'],
                               'country' => array('id' => $shipping_address['countries_id'], 'title' => $shipping_address['countries_name'], 'iso_code_2' => $shipping_address['countries_iso_code_2'], 'iso_code_3' => $shipping_address['countries_iso_code_3']),
                               'country_id' => $shipping_address['entry_country_id'],
@@ -328,7 +323,7 @@
                              'suburb' => $billing_address['entry_suburb'],
                              'city' => $billing_address['entry_city'],
                              'postcode' => $billing_address['entry_postcode'],
-                             'state' => ((oosNotNull($billing_address['entry_state'])) ? $billing_address['entry_state'] : $billing_address['zone_name']),
+                             'state' => ((oos_is_not_null($billing_address['entry_state'])) ? $billing_address['entry_state'] : $billing_address['zone_name']),
                              'country' => array('id' => $billing_address['countries_id'], 'title' => $billing_address['countries_name'], 'iso_code_2' => $billing_address['countries_iso_code_2'], 'iso_code_3' => $billing_address['countries_iso_code_3'], 'moneybookers' => $billing_address['countries_moneybookers']),
                              'country_id' => $billing_address['entry_country_id'],
                              'format_id' => $billing_address['address_format_id']);
@@ -339,8 +334,8 @@
                                         'name' => $products[$i]['name'],
                                         'model' => $products[$i]['model'],
                                         'ean' => $products[$i]['ean'],
-                                        'tax' => oosGetTaxRate($products[$i]['tax_class_id'], $billing_address['entry_country_id'], $$billing_address['entry_zone_id']),
-                                        'tax_description' => oosGetTaxDescription($products[$i]['tax_class_id'], $billing_address['entry_country_id'], $billing_address['entry_zone_id']),
+                                        'tax' => oos_get_tax_rate($products[$i]['tax_class_id'], $billing_address['entry_country_id'], $$billing_address['entry_zone_id']),
+                                        'tax_description' => oos_get_tax_description($products[$i]['tax_class_id'], $billing_address['entry_country_id'], $billing_address['entry_zone_id']),
                                         'price' => $products[$i]['price'],
                                         'final_price' => $products[$i]['price'] + $_SESSION['cart']->attributes_price($products[$i]['id']),
                                         'weight' => $products[$i]['weight'],
@@ -353,19 +348,19 @@
           while (list($option, $value) = each($products[$i]['attributes'])) {
             $sql = "SELECT 
                         popt.products_options_name, poval.products_options_values_name, pa.options_values_price, 
-                        pa.price_prefix 
+                        pa.price_prefix
                     FROM 
-                        " . $oosDBTable['products_options'] . " popt, 
-                        " . $oosDBTable['products_options_values'] . " poval, 
-                        " . $oosDBTable['products_attributes'] . " pa 
+                        " . $oosDBTable['products_options'] . " popt,
+                        " . $oosDBTable['products_options_values'] . " poval,
+                        " . $oosDBTable['products_attributes'] . " pa
                     WHERE 
-                        pa.products_id = '" . oosDBInput($products[$i]['id']) . "' AND 
-                        pa.options_id = '" . oosDBInput($option) . "' AND 
-                        pa.options_id = popt.products_options_id AND 
-                        pa.options_values_id = '" . oosDBInput($value) . "' AND 
-                        pa.options_values_id = poval.products_options_values_id AND 
-                        popt.products_options_language = '" .  oosDBInput($language) . "' AND 
-                        poval.products_options_values_language = '" .  oosDBInput($language) . "'";
+                        pa.products_id = '" . oosDBInput($products[$i]['id']) . "' AND
+                        pa.options_id = '" . oosDBInput($option) . "' AND
+                        pa.options_id = popt.products_options_id AND
+                        pa.options_values_id = '" . oosDBInput($value) . "' AND
+                        pa.options_values_id = poval.products_options_values_id AND
+                        popt.products_options_languages_id = '" .  intval($nLanguageID) . "' AND
+                        poval.products_options_values_languages_id = '" .  intval($nLanguageID) . "'";
             $attributes_result = $db->Execute($sql);
             $attributes = $attributes_result->fields;
             if ($value == PRODUCTS_OPTIONS_VALUE_TEXT_ID){
@@ -383,7 +378,7 @@
           }
         }
 
-        $shown_price = oosAddTax($this->products[$index]['final_price'], $this->products[$index]['tax']) * $this->products[$index]['qty'];
+        $shown_price = oos_add_tax($this->products[$index]['final_price'], $this->products[$index]['tax']) * $this->products[$index]['qty'];
         $this->info['subtotal'] += $shown_price;
 
         $products_tax = $this->products[$index]['tax'];
