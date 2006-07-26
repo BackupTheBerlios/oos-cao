@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_functions.php,v 1.4 2006/07/26 06:23:06 r23 Exp $
+   $Id: cao_functions.php,v 1.5 2006/07/26 07:40:46 r23 Exp $
 
    Based on:
 
@@ -89,7 +89,7 @@ endif;
 
 function SendScriptVersion ()
 {
-   global $_GET, $version_nr, $version_datum;
+   global $version_nr, $version_datum;
 
    $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
              '<STATUS>' . "\n" .
@@ -270,7 +270,7 @@ function  SendManufacturers ()
 
 function SendOrders ()
 {
-  global $_GET, $order_total_class;
+  global $order_total_class;
 
   $order_from = xtc_db_prepare_input($_GET['order_from']);
   $order_to = xtc_db_prepare_input($_GET['order_to']);
@@ -486,7 +486,7 @@ function SendOrders ()
 
 function SendProducts ()
 {
-  global $_GET, $LangID;
+  global $LangID;
 
   if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
 
@@ -765,7 +765,6 @@ function SendProducts ()
 
 function SendCustomers ()
 {
-  global $_GET;
 
   if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
 
@@ -843,8 +842,6 @@ function SendCustomers ()
 
 function SendCustomersNewsletter ()
 {
-  global $_GET;
-
   if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
@@ -1174,7 +1171,6 @@ function xtc_remove_product($product_id)
 
 function ManufacturersImageUpload ()
 {
-  global $_GET, $_POST;
 
   if ($manufacturers_image = &xtc_try_upload('manufacturers_image',DIR_FS_CATALOG.DIR_WS_IMAGES,'777', '', true)) 
   {
@@ -1190,7 +1186,7 @@ function ManufacturersImageUpload ()
 
 function CategoriesImageUpload ()
 {
-  global $_GET, $_POST;
+
   if ( $categories_image = &xtc_try_upload('categories_image',DIR_FS_CATALOG.DIR_WS_IMAGES.'categories/','777', '', true)) 
   {
     $code = 0;
@@ -1205,7 +1201,7 @@ function CategoriesImageUpload ()
 
 function ProductsImageUpload ()
 {
-  global $_GET, $_POST;
+
   if ($products_image = &xtc_try_upload('products_image',DIR_FS_CATALOG.DIR_WS_ORIGINAL_IMAGES,'777', '', true)) 
   {
     $products_image_name = $products_image->filename;
@@ -1234,8 +1230,6 @@ function ProductsImageUpload ()
 
 function ManufacturersUpdate ()
 {
-  global $_POST;
-
   $manufacturers_id = xtc_db_prepare_input($_POST['mID']);
 
   if (isset($manufacturers_id))
@@ -1340,8 +1334,6 @@ elseif ($exists==1) // Update
 
 function ManufacturersErase ()
 {
-  global $_POST;
-
   $ManID  = xtc_db_prepare_input($_POST['mID']);
 
   if (isset($ManID))
@@ -1364,7 +1356,7 @@ function ManufacturersErase ()
 
 function ProductsUpdate ()
 {
-  global $_POST, $LangID;
+  global $LangID;
 
   $languages_query = xtc_db_query("select languages_id, name, code, image, directory from " . TABLE_LANGUAGES . " order by sort_order");
   while ($languages = xtc_db_fetch_array($languages_query)) 
@@ -1608,7 +1600,6 @@ function ProductsUpdate ()
 
 function ProductsErase ()
 {
-  global $_POST;
 
   $ProdID  = xtc_db_prepare_input($_POST['prodid']);
   if (isset($ProdID))
@@ -1633,7 +1624,6 @@ function ProductsErase ()
 
 function ProductsSpecialPriceUpdate ()
 {
-  global $_POST;
 
   $ProdID  = xtc_db_prepare_input($_POST['prodid']);
 
@@ -1686,7 +1676,6 @@ function ProductsSpecialPriceUpdate ()
 
 function ProductsSpecialPriceErase ()
 {
-  global $_POST; 
 
   $ProdID  = xtc_db_prepare_input($_POST['prodid']);
   if (isset($ProdID))
@@ -1704,7 +1693,7 @@ function ProductsSpecialPriceErase ()
 
 function CategoriesUpdate ()
 {
-  global $_POST, $LangID;
+  global $LangID;
 
   $CatID    = xtc_db_prepare_input($_POST['catid']);
   $ParentID = xtc_db_prepare_input($_POST['parentid']);
@@ -1870,7 +1859,6 @@ if ($exists==0) // Insert
 
 function CategoriesErase ()
 {
-  global $_POST;
 
   $CatID  = xtc_db_prepare_input($_POST['catid']);
 
@@ -1894,7 +1882,6 @@ function CategoriesErase ()
 
 function Prod2CatUpdate ()
 {
-  global $_POST;
 
   $ProdID = xtc_db_prepare_input($_POST['prodid']);
   $CatID  = xtc_db_prepare_input($_POST['catid']);
@@ -1913,7 +1900,6 @@ function Prod2CatUpdate ()
 
 function Prod2CatErase ()
 {
-  global $_POST;
 
   $ProdID = xtc_db_prepare_input($_POST['prodid']);
   $CatID  = xtc_db_prepare_input($_POST['catid']);
@@ -1932,7 +1918,7 @@ function Prod2CatErase ()
 
 function OrderUpdate ()
 {
-  global $_POST, $LangID;
+  global $LangID;
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" . "\n";
 
@@ -2088,7 +2074,7 @@ function OrderUpdate ()
 
 function CustomersUpdate ()
 {
-  global $_POST, $Lang_folder;
+  global $Lang_folder;
 
   $customers_id = -1;
   // include PW function
@@ -2219,7 +2205,6 @@ function CustomersUpdate ()
 
 function CustomersErase ()
 {
-  global $_POST;
 
   $cID  = xtc_db_prepare_input($_POST['cID']);
 
