@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_functions.php,v 1.5 2006/07/26 07:40:46 r23 Exp $
+   $Id: cao_functions.php,v 1.6 2006/07/26 10:51:30 r23 Exp $
 
    Based on:
 
@@ -68,126 +68,82 @@
 *  - 07.11.2005 JP Export Orders/VAT_ID implementiert                                      *
 *******************************************************************************************/
 
-if (!function_exists('xtDBquery')) : 
 
-	function xtDBquery($query) 
-	{
-	//	if (DB_CACHE == 'true') 
-	//	{
-	//		$result = xtc_db_queryCached($query);
-	//	} 
-	//	  else 
-	//	{
-			$result = xtc_db_query($query);
-	//	}
-		return $result;
-	}
-	
-endif;
-	
-//--------------------------------------------------------------
+  function SendScriptVersion () {
+    global $version_nr, $version_datum;
 
-function SendScriptVersion ()
-{
-   global $version_nr, $version_datum;
-
-   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-             '<STATUS>' . "\n" .
-             '<STATUS_DATA>' . "\n" .
-             '<ACTION>' . $_GET['action'] . '</ACTION>' . "\n" .
-             '<CODE>' . '111' . '</CODE>' . "\n" .              
-             '<SCRIPT_VER>' . $version_nr . '</SCRIPT_VER>' . "\n" . 
-             '<SCRIPT_DATE>' . $version_datum . '</SCRIPT_DATE>' . "\n" . 
-             '</STATUS_DATA>' . "\n" .
-             '</STATUS>' . "\n\n";
-   echo $schema; 
-}
-
-
-//--------------------------------------------------------------
-
-function print_xml_status ($code, $action, $msg, $mode, $item, $value)
-{
-  $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-            '<STATUS>' . "\n" .
-            '<STATUS_DATA>' . "\n" .
-            '<CODE>' . $code . '</CODE>' . "\n" .
-            '<ACTION>' . $action . '</ACTION>' . "\n" .
-            '<MESSAGE>' . $msg . '</MESSAGE>' . "\n";
-
-  if (strlen($mode)>0) {
-    $schema .= '<MODE>' . $mode . '</MODE>' . "\n";
+    $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
+              '<STATUS>' . "\n" .
+              '<STATUS_DATA>' . "\n" .
+              '<ACTION>' . $_GET['action'] . '</ACTION>' . "\n" .
+              '<CODE>' . '111' . '</CODE>' . "\n" .
+              '<SCRIPT_VER>' . $version_nr . '</SCRIPT_VER>' . "\n" .
+              '<SCRIPT_DATE>' . $version_datum . '</SCRIPT_DATE>' . "\n" .
+              '</STATUS_DATA>' . "\n" .
+              '</STATUS>' . "\n\n";
+    echo $schema;
   }
 
-  if (strlen($item)>0) {
-    $schema .= '<' . $item . '>' . $value . '</' . $item . '>' . "\n";
+
+
+  function print_xml_status ($code, $action, $msg, $mode, $item, $value) {
+
+    $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
+              '<STATUS>' . "\n" .
+              '<STATUS_DATA>' . "\n" .
+              '<CODE>' . $code . '</CODE>' . "\n" .
+              '<ACTION>' . $action . '</ACTION>' . "\n" .
+              '<MESSAGE>' . $msg . '</MESSAGE>' . "\n";
+
+    if (strlen($mode)>0) {
+      $schema .= '<MODE>' . $mode . '</MODE>' . "\n";
+    }
+
+    if (strlen($item)>0) {
+      $schema .= '<' . $item . '>' . $value . '</' . $item . '>' . "\n";
+    }
+    $schema .= '</STATUS_DATA>' . "\n" .
+               '</STATUS>' . "\n\n";
+
+    echo $schema;
+
+    return;
   }
-  $schema .= '</STATUS_DATA>' . "\n" .
-             '</STATUS>' . "\n\n";
 
-  echo $schema;
+  function SendCategories () {
 
-  return;
-}
+    if (!get_cfg_var('safe_mode')) {
+      @set_time_limit(0);
+    }
 
+    $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
+              '<CATEGORIES>' . "\n";
+    echo $schema;
 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
-function table_exists($table_name) 
-{
-  $Table = mysql_query("show tables like '" . $table_name . "'");
-  if(mysql_fetch_row($Table) === false)
-  {
-    return(false);
-  } else {
-    return(true);
-  }
-}
+    $cat_query = xtc_db_query("SELECT categories_id, categories_image, parent_id, sort_order, date_added, last_modified ".
+                            " FROM " . $oosDBTable['categories'] . " ORDER BY parent_id, categories_id");
+    while ($cat = xtc_db_fetch_array($cat_query)) {
+      $schema  = '<CATEGORIES_DATA>' . "\n" .
+                 '<ID>' . $cat['categories_id'] . '</ID>' . "\n" .
+                 '<PARENT_ID>' . $cat['parent_id'] . '</PARENT_ID>' . "\n" .
+                 '<IMAGE_URL>' . htmlspecialchars($cat['categories_image']) . '</IMAGE_URL>' . "\n" .
+                 '<SORT_ORDER>' . $cat['sort_order'] . '</SORT_ORDER>' . "\n" .
+                 '<DATE_ADDED>' . $cat['date_added'] . '</DATE_ADDED>' . "\n" .
+                 '<LAST_MODIFIED>' . $cat['last_modified'] . '</LAST_MODIFIED>' . "\n";
 
-
-function column_exists($table, $column) 
-{
-  $Table = mysql_query("show columns from $table LIKE '" . $column . "'");
-  if(mysql_fetch_row($Table) === false)
-  {
-    return(false);
-  } else {
-    return(true);
-  }
-}
-
-
-function SendCategories ()
-{
-  if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
-
-  $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
-            '<CATEGORIES>' . "\n";
-
-  echo $schema;
-
-  $cat_query = xtc_db_query("select categories_id, categories_image, parent_id, sort_order, date_added, last_modified ".
-                            " from " . TABLE_CATEGORIES . " order by parent_id, categories_id");
-  while ($cat = xtc_db_fetch_array($cat_query))
-  {
-    $schema  = '<CATEGORIES_DATA>' . "\n" .
-               '<ID>' . $cat['categories_id'] . '</ID>' . "\n" .
-               '<PARENT_ID>' . $cat['parent_id'] . '</PARENT_ID>' . "\n" .
-               '<IMAGE_URL>' . htmlspecialchars($cat['categories_image']) . '</IMAGE_URL>' . "\n" .
-               '<SORT_ORDER>' . $cat['sort_order'] . '</SORT_ORDER>' . "\n" .
-               '<DATE_ADDED>' . $cat['date_added'] . '</DATE_ADDED>' . "\n" .
-               '<LAST_MODIFIED>' . $cat['last_modified'] . '</LAST_MODIFIED>' . "\n";
-
-    $detail_query = xtc_db_query("select categories_id, language_id,
-                                  categories_name,
+      $detail_query = xtc_db_query("SELECT categories_id, language_id,
+                                    categories_name,
                                   categories_heading_title,
                                   categories_description,
                                   categories_meta_title,
                                   categories_meta_description,
-                                  categories_meta_keywords, " . TABLE_LANGUAGES . ".code as lang_code, " . TABLE_LANGUAGES . ".name as lang_name from " . TABLE_CATEGORIES_DESCRIPTION . "," . TABLE_LANGUAGES .
-                                  " where " . TABLE_CATEGORIES_DESCRIPTION . ".categories_id=" . $cat['categories_id'] . " and " . TABLE_LANGUAGES . ".languages_id=" . TABLE_CATEGORIES_DESCRIPTION . ".language_id");
+                                  categories_meta_keywords, " . $oosDBTable['languages'] . ".code as lang_code, " . $oosDBTable['languages'] . ".name as lang_name FROM " . $oosDBTable['categories_description'] . "," . $oosDBTable['languages'] .
+                                  " WHERE " . $oosDBTable['categories_description'] . ".categories_id=" . $cat['categories_id'] . " and " . $oosDBTable['languages'] . ".languages_id=" . $oosDBTable['categories_description'] . ".language_id");
 
-    while ($details = xtc_db_fetch_array($detail_query))
-    {
+    while ($details = xtc_db_fetch_array($detail_query)) {
       $schema .= "<CATEGORIES_DESCRIPTION ID='" . $details["language_id"] ."' CODE='" . $details["lang_code"] . "' NAME='" . $details["lang_name"] . "'>\n";
       $schema .= "<NAME>" . htmlspecialchars($details["categories_name"]) . "</NAME>" . "\n";
       $schema .= "<HEADING_TITLE>" . htmlspecialchars($details["categories_heading_title"]) . "</HEADING_TITLE>" . "\n";
@@ -199,8 +155,8 @@ function SendCategories ()
     }
 
     // Produkte in dieser Categorie auflisten
-    $prod2cat_query = xtc_db_query("select categories_id, products_id from " . TABLE_PRODUCTS_TO_CATEGORIES .
-                                   " where categories_id='" . $cat['categories_id'] . "'");
+    $prod2cat_query = xtc_db_query("SELECT categories_id, products_id FROM " . $oosDBTable['products_to_categories'] .
+                                   " WHERE categories_id='" . $cat['categories_id'] . "'");
 
     while ($prod2cat = xtc_db_fetch_array($prod2cat_query))
     {
@@ -214,19 +170,24 @@ function SendCategories ()
 }
 
 
-function  SendManufacturers ()
-{
-  if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
+  function SendManufacturers () {
+    if (!get_cfg_var('safe_mode')) {
+      @set_time_limit(0);
+    }
+
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
             '<MANUFACTURERS>' . "\n";
   echo $schema;
 
-  $cat_query = xtc_db_query("select manufacturers_id, manufacturers_name, manufacturers_image, date_added, last_modified ".
-                            " from " . TABLE_MANUFACTURERS . " order by manufacturers_id");
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
-  while ($cat = xtc_db_fetch_array($cat_query))
-  {
+
+  $cat_query = xtc_db_query("SELECT manufacturers_id, manufacturers_name, manufacturers_image, date_added, last_modified ".
+                            " FROM " . $oosDBTable['manufacturers'] . " ORDER BY manufacturers_id");
+
+  while ($cat = xtc_db_fetch_array($cat_query)) {
     $schema  = '<MANUFACTURERS_DATA>' . "\n" .
                '<ID>' . $cat['manufacturers_id'] . '</ID>' . "\n" .
                '<NAME>' . htmlspecialchars($cat['manufacturers_name']) . '</NAME>' . "\n" .
@@ -234,20 +195,20 @@ function  SendManufacturers ()
                '<DATE_ADDED>' . $cat['date_added'] . '</DATE_ADDED>' . "\n" .
                '<LAST_MODIFIED>' . $cat['last_modified'] . '</LAST_MODIFIED>' . "\n";
 
-    $sql = "select 
-             manufacturers_id, " . 
-             TABLE_MANUFACTURERS_INFO . ".languages_id, 
+    $sql = "SELECT
+             manufacturers_id, " .
+             $oosDBTable['manufacturers_info']. ".languages_id,
              manufacturers_url, 
              url_clicked, 
-             date_last_click, " . 
-             TABLE_LANGUAGES . ".code as lang_code, " . 
-             TABLE_LANGUAGES . ".name as lang_name 
-            from " . 
-             TABLE_MANUFACTURERS_INFO . "," . 
-             TABLE_LANGUAGES . " 
-            where " . 
-             TABLE_MANUFACTURERS_INFO . ".manufacturers_id=" . $cat['manufacturers_id'] . " and " . 
-             TABLE_LANGUAGES . ".languages_id=" . TABLE_MANUFACTURERS_INFO . ".languages_id";
+             date_last_click, " .
+             $oosDBTable['languages'] . ".code as lang_code, " .
+             $oosDBTable['languages'] . ".name as lang_name
+            FROM " . 
+             $oosDBTable['manufacturers_info']. "," .
+             $oosDBTable['languages'] . " 
+            WHERE " . 
+             $oosDBTable['manufacturers_info']. ".manufacturers_id=" . $cat['manufacturers_id'] . " and " .
+             $oosDBTable['languages'] . ".languages_id=" . $oosDBTable['manufacturers_info']. ".languages_id";
 
     $detail_query = xtc_db_query($sql);
 
@@ -268,22 +229,27 @@ function  SendManufacturers ()
 
 
 
-function SendOrders ()
-{
+  function SendOrders () {
   global $order_total_class;
 
-  $order_from = xtc_db_prepare_input($_GET['order_from']);
+  $order_FROM = xtc_db_prepare_input($_GET['order_FROM']);
   $order_to = xtc_db_prepare_input($_GET['order_to']);
   $order_status = xtc_db_prepare_input($_GET['order_status']);
 
-  if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
+    if (!get_cfg_var('safe_mode')) {
+      @set_time_limit(0);
+    }
+
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
             '<ORDER>' . "\n";
   echo $schema;
 
-  $sql ="select * from " . TABLE_ORDERS . " where orders_id >= '" . xtc_db_input($order_from) . "'";
-  if (!isset($order_status) && !isset($order_from)) 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
+  $sql ="SELECT * FROM " . $oosDBTable['orders'] . " WHERE orders_id >= '" . xtc_db_input($order_FROM) . "'";
+  if (!isset($order_status) && !isset($order_FROM)) 
   {
     $order_status = 1;
     $sql .= "and orders_status = " . $order_status;
@@ -297,7 +263,7 @@ function SendOrders ()
   while ($orders = xtc_db_fetch_array($orders_query))
   {
     // Geburtsdatum laden
-    $cust_sql = "select * from " . TABLE_CUSTOMERS . " where customers_id=" . $orders['customers_id'];
+    $cust_sql = "SELECT * FROM " . $oosDBTable['customers'] . " WHERE customers_id=" . $orders['customers_id'];
     $cust_query = xtc_db_query ($cust_sql);
     if (($cust_query) && ($cust_data = xtc_db_fetch_array($cust_query)))
     {
@@ -350,8 +316,8 @@ function SendOrders ()
                '<DELIVERY_ADDRESS>' . "\n" .
                '<COMPANY>' . htmlspecialchars($orders['delivery_company']) . '</COMPANY>' . "\n" .
                '<NAME>' . htmlspecialchars($orders['delivery_name']) . '</NAME>' . "\n" .
-               '<FIRSTNAME>' . htmlspecialchars($orders['delivery_firstname']) . '</FIRSTNAME>' . "\n" . 
-               '<LASTNAME>' . htmlspecialchars($orders['delivery_lastname']) . '</LASTNAME>' . "\n" .                    
+               '<FIRSTNAME>' . htmlspecialchars($orders['delivery_firstname']) . '</FIRSTNAME>' . "\n" .
+               '<LASTNAME>' . htmlspecialchars($orders['delivery_lastname']) . '</LASTNAME>' . "\n" .
                '<STREET>' . htmlspecialchars($orders['delivery_street_address']) . '</STREET>' . "\n" .
                '<POSTCODE>' . htmlspecialchars($orders['delivery_postcode']) . '</POSTCODE>' . "\n" .
                '<CITY>' . htmlspecialchars($orders['delivery_city']) . '</CITY>' . "\n" .
@@ -373,9 +339,9 @@ function SendOrders ()
              $bank_inh  = '';
              $bank_stat = -1;
 
-             $bank_sql = "select * from banktransfer where orders_id = " . $orders['orders_id'];
+             $bank_sql = "SELECT * FROM " . $oosDBTable['banktransfer'] " .  WHERE orders_id = " . $orders['orders_id'];
              $bank_query = xtc_db_query($bank_sql);
-          if (($bank_query) && ($bankdata = xtc_db_fetch_array($bank_query))) 
+          if (($bank_query) && ($bankdata = xtc_db_fetch_array($bank_query)))
           {
             $bank_name = $bankdata['banktransfer_bankname'];
             $bank_blz  = $bankdata['banktransfer_blz'];
@@ -390,14 +356,14 @@ function SendOrders ()
                         '<PAYMENT_BANKTRANS_STATUS>' . htmlspecialchars($bank_stat) . '</PAYMENT_BANKTRANS_STATUS>' . "\n";
              break;
     }
-    $schema .= '</PAYMENT>' . "\n" . 
-               '<SHIPPING>' . "\n" . 
+    $schema .= '</PAYMENT>' . "\n" .
+               '<SHIPPING>' . "\n" .
                '<SHIPPING_METHOD>' . htmlspecialchars($orders['shipping_method']) . '</SHIPPING_METHOD>'  . "\n" .
                '<SHIPPING_CLASS>' . htmlspecialchars($orders['shipping_class']) . '</SHIPPING_CLASS>'  . "\n" .
                '</SHIPPING>' . "\n" .
                '<ORDER_PRODUCTS>' . "\n";
 
-    $sql = "select
+    $sql = "SELECT
              orders_products_id,
              allow_tax,
              products_id,
@@ -406,9 +372,9 @@ function SendOrders ()
              final_price,
              products_tax,
              products_quantity
-            from " . 
-             TABLE_ORDERS_PRODUCTS . " 
-            where 
+            FROM " . 
+             $oosDBTable['orders_products'] . "
+            WHERE 
              orders_id = '" . $orders['orders_id'] . "'";
 
     $products_query = xtc_db_query($sql);
@@ -424,7 +390,7 @@ function SendOrders ()
                  '<PRODUCTS_TAX>' . $products['products_tax'] . '</PRODUCTS_TAX>' . "\n".
                  '<PRODUCTS_TAX_FLAG>' . $products['allow_tax'] . '</PRODUCTS_TAX_FLAG>' . "\n";
 
-      $attributes_query = xtc_db_query("select products_options, products_options_values, options_values_price, price_prefixfrom " . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " where orders_id = '" .$orders['orders_id'] . "' and orders_products_id = '" . $products['orders_products_id'] . "'");
+      $attributes_query = xtc_db_query("SELECT products_options, products_options_values, options_values_price, price_prefixFROM " . $oosDBTable['orders_products_attributes'] . " WHERE orders_id = '" .$orders['orders_id'] . "' and orders_products_id = '" . $products['orders_products_id'] . "'");
       if (xtc_db_num_rows($attributes_query))
       {
         while ($attributes = xtc_db_fetch_array($attributes_query))
@@ -444,7 +410,7 @@ function SendOrders ()
     $schema .= '</ORDER_PRODUCTS>' . "\n";
     $schema .= '<ORDER_TOTAL>' . "\n";
 
-    $totals_query = xtc_db_query("select title, value, class, sort_order from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . $orders['orders_id'] . "' order by sort_order");
+    $totals_query = xtc_db_query("SELECT title, value, class, sort_order FROM " . $oosDBTable['orders_total'] . " WHERE orders_id = '" . $orders['orders_id'] . "' ORDER BY sort_order");
     while ($totals = xtc_db_fetch_array($totals_query))
     {
       $total_prefix = "";
@@ -462,11 +428,11 @@ function SendOrders ()
     }
     $schema .= '</ORDER_TOTAL>' . "\n";
 
-    $sql = "select
+    $sql = "SELECT
              comments
-            from " .
-             TABLE_ORDERS_STATUS_HISTORY . "
-            where
+            FROM " .
+             $oosDBTable['orders_status_history'] . "
+            WHERE
              orders_id = '" . $orders['orders_id'] . "' and
              orders_status_id = '" . $orders['orders_status'] . "' ";
 
@@ -484,26 +450,30 @@ function SendOrders ()
 
 
 
-function SendProducts ()
-{
+  function SendProducts () {
   global $LangID;
 
-  if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
+  if (!get_cfg_var('safe_mode')) {
+    @set_time_limit(0);
+  }
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
             '<PRODUCTS>' . "\n";
   echo $schema;
 
-  $sql = "select products_id,products_fsk18, products_quantity, products_model, products_image, products_price, " .
-         "products_date_added, products_last_modified, products_date_available, products_weight, " .
-         "products_status, products_tax_class_id, manufacturers_id, products_ordered from " . TABLE_PRODUCTS;
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
-  $from = xtc_db_prepare_input($_GET['products_from']);
+  $sql = "SELECT products_id,products_fsk18, products_quantity, products_model, products_image, products_price, " .
+         "products_date_added, products_last_modified, products_date_available, products_weight, " .
+         "products_status, products_tax_class_id, manufacturers_id, products_ordered FROM " .  $oosDBTable['products'];
+
+  $FROM = xtc_db_prepare_input($_GET['products_FROM']);
   $anz  = xtc_db_prepare_input($_GET['products_count']);
-  if (isset($from))
+  if (isset($FROM))
   {
     if (!isset($anz)) $anz=1000;
-    $sql .= " limit " . $from . "," . $anz;
+    $sql .= " limit " . $FROM . "," . $anz;
   }
 
   $orders_query = xtc_db_query($sql);
@@ -558,10 +528,10 @@ function SendProducts ()
     $products_attributes='';
     $products_options_data=array();
     $products_options_array =array();
-    $products_attributes_query = xtc_db_query("select count(*) as total
-                                               from " . TABLE_PRODUCTS_OPTIONS . "
-                                               popt, " . TABLE_PRODUCTS_ATTRIBUTES . "
-                                               patrib where
+    $products_attributes_query = xtc_db_query("SELECT count(*) as total
+                                               FROM " .  $oosDBTable['products']_OPTIONS . "
+                                               popt, " .  $oosDBTable['products_attributes'] . "
+                                               patrib WHERE
                                                patrib.products_id='" . $products['products_id'] . "'
                                                and patrib.options_id = popt.products_options_id
                                                and popt.language_id = '" . $LangID . "'");
@@ -570,26 +540,26 @@ function SendProducts ()
 
     if ($products_attributes['total'] > 0) 
     {
-      $products_options_name_query = xtc_db_query("select distinct
+      $products_options_name_query = xtc_db_query("SELECT distinct
                                                    popt.products_options_id,
                                                    popt.products_options_name
-                                                   from " . TABLE_PRODUCTS_OPTIONS . "
-                                                   popt, " . TABLE_PRODUCTS_ATTRIBUTES . " patrib
-                                                   where patrib.products_id='" . $products['products_id'] . "'
+                                                   FROM " .  $oosDBTable['products']_OPTIONS . "
+                                                   popt, " .  $oosDBTable['products_attributes'] . " patrib
+                                                   WHERE patrib.products_id='" . $products['products_id'] . "'
                                                    and patrib.options_id = popt.products_options_id
-                                                   and popt.language_id = '" . $LangID . "' order by popt.products_options_name");
+                                                   and popt.language_id = '" . $LangID . "' ORDER BY popt.products_options_name");
       $row = 0;
       $col = 0;
       $products_options_data=array();
       while ($products_options_name = xtc_db_fetch_array($products_options_name_query)) 
       {
-        $selected = 0;
+        $SELECTed = 0;
         $products_options_array = array();
         $products_options_data[$row]=array(
                        'NAME'=>$products_options_name['products_options_name'],
                        'ID' => $products_options_name['products_options_id'],
                        'DATA' =>'');
-        $products_options_query = xtc_db_query("select
+        $products_options_query = xtc_db_query("SELECT
                                                  pov.products_options_values_id,
                                                  pov.products_options_values_name,
                                                  pa.attributes_model,
@@ -599,15 +569,15 @@ function SendProducts ()
                                                  pa.weight_prefix,
                                                  pa.attributes_stock,
                                                  pa.attributes_model
-                                                from " . TABLE_PRODUCTS_ATTRIBUTES . "
-                                                 pa, " . TABLE_PRODUCTS_OPTIONS_VALUES . "
+                                                FROM " .  $oosDBTable['products_attributes'] . "
+                                                 pa, " .  $oosDBTable['products']_OPTIONS_VALUES . "
                                                  pov 
-                                                where
+                                                WHERE
                                                  pa.products_id = '" . $products['products_id'] . "'
                                                  and pa.options_id = '" . $products_options_name['products_options_id'] . "' and
                                                  pa.options_values_id = pov.products_options_values_id and
                                                  pov.language_id = '" . $LangID . "' 
-                                                order by pov.products_options_values_name");
+                                                ORDER BY pov.products_options_values_name");
         $col = 0;
         while ($products_options = xtc_db_fetch_array($products_options_query)) 
         {
@@ -684,8 +654,8 @@ function SendProducts ()
 
     $categories_query=xtc_db_query("SELECT
                                      categories_id
-                                    FROM ".TABLE_PRODUCTS_TO_CATEGORIES."
-                                     where products_id='".$products['products_id']."'");
+                                    FROM ".$oosDBTable['products_to_categories']."
+                                     WHERE products_id='".$products['products_id']."'");
     $categories=array();
     while ($categories_data=xtc_db_fetch_array($categories_query)) 
     {
@@ -697,10 +667,10 @@ function SendProducts ()
 
     */
 
-    $detail_query = xtc_db_query("select
+    $detail_query = xtc_db_query("SELECT
                                    products_id,
                                    language_id,
-                                   products_name, " . TABLE_PRODUCTS_DESCRIPTION .
+                                   products_name, " .  $oosDBTable['products_description'] .
                                    ".products_description,
                                    products_short_description,
                                    products_meta_title,
@@ -708,9 +678,9 @@ function SendProducts ()
                                    products_meta_keywords,
                                    products_url,
                                    name as language_name, code as language_code " .
-                                   "from " . TABLE_PRODUCTS_DESCRIPTION . ", " . TABLE_LANGUAGES . " " .
-                                   "where " . TABLE_PRODUCTS_DESCRIPTION . ".language_id=" . TABLE_LANGUAGES . ".languages_id " .
-                                   "and " . TABLE_PRODUCTS_DESCRIPTION . ".products_id=" . $products['products_id']);
+                                   "FROM " .  $oosDBTable['products_description'] . ", " . $oosDBTable['languages'] . " " .
+                                   "WHERE " .  $oosDBTable['products_description'] . ".language_id=" . $oosDBTable['languages'] . ".languages_id " .
+                                   "and " .  $oosDBTable['products_description'] . ".products_id=" . $products['products_id']);
 
     while ($details = xtc_db_fetch_array($detail_query))
     {
@@ -735,8 +705,8 @@ function SendProducts ()
     }
 
         // NEU JP 26.08.2005 Aktionspreise exportieren
-        $special_query = "SELECT * from " . TABLE_SPECIALS . " " .
-                         "where products_id=" . $products['products_id'] . " limit 0,1";
+        $special_query = "SELECT * FROM " . $oosDBTable['specials'] . " " .
+                         "WHERE products_id=" . $products['products_id'] . " limit 0,1";
 
         $special_result = xtc_db_query($special_query);
 
@@ -763,19 +733,23 @@ function SendProducts ()
 
 
 
-function SendCustomers ()
-{
+  function SendCustomers () {
 
-  if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
+    if (!get_cfg_var('safe_mode')) {
+      @set_time_limit(0);
+    }
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
             '<CUSTOMERS>' . "\n";
   echo $schema;
 
-  $from = xtc_db_prepare_input($_GET['customers_from']);
+  $FROM = xtc_db_prepare_input($_GET['customers_FROM']);
   $anz  = xtc_db_prepare_input($_GET['customers_count']);
 
-  $address_query = "select
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
+  $address_query = "SELECT
                     c.customers_gender, 
                     c.customers_id,
                     c.customers_cid, 
@@ -793,21 +767,21 @@ function SendCustomers ()
                     a.entry_suburb,
                     a.entry_state,
                     co.countries_iso_code_2
-                   from 
-                    " . TABLE_CUSTOMERS . " c, 
-                    " . TABLE_CUSTOMERS_INFO . " ci, 
-                    " . TABLE_ADDRESS_BOOK . " a , 
-                    " . TABLE_COUNTRIES . " co
-                   where
+                   FROM 
+                    " . $oosDBTable['customers'] . " c,
+                    " . $oosDBTable['customers_info'] . " ci,
+                    " . $oosDBTable['address_book'] . " a ,
+                    " . $oosDBTable['countries'] . " co
+                   WHERE
                     c.customers_id = ci.customers_info_id AND
                     c.customers_id = a.customers_id AND
                     c.customers_default_address_id = a.address_book_id AND
                     a.entry_country_id  = co.countries_id";
 
-  if (isset($from))
+  if (isset($FROM))
   {
     if (!isset($anz)) $anz = 1000;
-    $address_query.= " limit " . $from . "," . $anz;
+    $address_query.= " limit " . $FROM . "," . $anz;
   }
   $address_result = xtc_db_query($address_query);
 
@@ -840,24 +814,29 @@ function SendCustomers ()
 
 
 
-function SendCustomersNewsletter ()
-{
-  if (defined('SET_TIME_LIMIT')) { @set_time_limit(0);}
+  function SendCustomersNewsletter () {
+    if (!get_cfg_var('safe_mode')) {
+      @set_time_limit(0);
+    }
+
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
             '<CUSTOMERS>' . "\n".
 
-  $from = xtc_db_prepare_input($_GET['customers_from']);
+  $FROM = xtc_db_prepare_input($_GET['customers_FROM']);
   $anz  = xtc_db_prepare_input($_GET['customers_count']);
 
-  $address_query = "select *
-                    from " . TABLE_CUSTOMERS. " 
-                    where customers_newsletter = 1";
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
-  if (isset($from))
+  $address_query = "SELECT *
+                    FROM " . $oosDBTable['customers']. " 
+                    WHERE customers_newsletter = 1";
+
+  if (isset($FROM))
   {
     if (!isset($anz)) $anz = 1000;
-    $address_query.= " limit " . $from . "," . $anz;
+    $address_query.= " limit " . $FROM . "," . $anz;
   }
   $address_result = xtc_db_query($address_query);
   while ($address = xtc_db_fetch_array($address_result))
@@ -877,18 +856,19 @@ function SendCustomersNewsletter ()
 
 
 
-function SendShopConfig ()
-{
+  function SendShopConfig () {
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" .
             '<CONFIG>' . "\n" .
             '<CONFIG_DATA>' . "\n" ;
   echo $schema;
 
-  $config_sql = 'select * from configuration';
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
+  $config_sql = "SELECT * FROM " . $oosDBTable['configuration'];
   $config_res = xtc_db_query($config_sql);
 
-  while ($config = xtc_db_fetch_array($config_res)) 
-  {
+  while ($config = xtc_db_fetch_array($config_res))  {
     $schema = '<ENTRY ID="' . $config['configuration_id'] . '">' .  "\n" .
            '<PARAM>' . htmlspecialchars($config['configuration_key']) . '</PARAM>' . "\n" .
            '<VALUE>' . htmlspecialchars($config['configuration_value']) . '</VALUE>' . "\n" .
@@ -908,11 +888,10 @@ function SendShopConfig ()
   $schema = '<TAX_CLASS>' . "\n";
   echo $schema;
 
-  $tax_class_sql = 'select * from tax_class';
+  $tax_class_sql = "SELECT * FROM " . $oosDBTable['tax_class'];
   $tax_class_res = xtc_db_query($tax_class_sql);
 
-  while ($tax_class = xtc_db_fetch_array($tax_class_res)) 
-  {
+  while ($tax_class = xtc_db_fetch_array($tax_class_res)) {
     $schema = '<CLASS ID="' . $tax_class['tax_class_id'] . '">' . "\n" .
            '<TITLE>' .         htmlspecialchars($tax_class['tax_class_title']) .       '</TITLE>' . "\n" .
            '<DESCRIPTION>' .   htmlspecialchars($tax_class['tax_class_description']) . '</DESCRIPTION>' . "\n" .
@@ -927,11 +906,10 @@ function SendShopConfig ()
   $schema = '<TAX_RATES>' . "\n";
   echo $schema;
 
-  $tax_rates_sql = 'select * from tax_rates';
+  $tax_rates_sql = "SELECT * FROM " . $oosDBTable['tax_rates'];
   $tax_rates_res = xtc_db_query($tax_rates_sql);
 
-  while ($tax_rates = xtc_db_fetch_array($tax_rates_res)) 
-  {
+  while ($tax_rates = xtc_db_fetch_array($tax_rates_res)) {
     $schema = '<RATES ID=">' . $tax_rates['tax_rates_id'] . '">' . "\n" .
               '<ZONE_ID>' .       htmlspecialchars($tax_rates['tax_zone_id']) .     '</ZONE_ID>' . "\n" .
               '<CLASS_ID>' .      htmlspecialchars($tax_rates['tax_class_id']) .    '</CLASS_ID>' . "\n" .
@@ -951,8 +929,7 @@ function SendShopConfig ()
 
 
 
-function SendXMLHeader ()
-{
+  function SendXMLHeader () {
   header ("Last-Modified: ". gmdate ("D, d M Y H:i:s"). " GMT");  // immer ge�dert
   header ("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
   header ("Pragma: no-cache"); // HTTP/1.0
@@ -961,8 +938,7 @@ function SendXMLHeader ()
 
 
 
-function SendHTMLHeader ()
-{
+  function SendHTMLHeader () {
   header ("Last-Modified: ". gmdate ("D, d M Y H:i:s"). " GMT");  // immer ge�dert
   header ("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
   header ("Pragma: no-cache"); // HTTP/1.0
@@ -971,8 +947,7 @@ function SendHTMLHeader ()
 
 
 
-function ShowHTMLMenu ()
-{
+  function ShowHTMLMenu () {
   global $version_nr, $version_datum, $user, $password, $PHP_SELF;
 
   SendHTMLHeader;
@@ -1005,8 +980,7 @@ function ShowHTMLMenu ()
 
 
 
-function UpdateTables ()
-{
+  function UpdateTables () {
   global $version_nr, $version_datum;
 
   SendHTMLHeader;
@@ -1015,18 +989,18 @@ function UpdateTables ()
   echo '<h3>Tabellen-Update / Erweiterung fr CAO-Faktura</h3>';
   echo '<h4>Version ' . $version_nr . ' Stand : ' . $version_datum .'</h4>';
 
-  $sql[1]  = 'ALTER TABLE ' . TABLE_PRODUCTS . ' ADD products_ean VARCHAR(128) AFTER products_id';
-  $sql[2]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD payment_class VARCHAR(32) NOT NULL';
-  $sql[3]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD shipping_method VARCHAR(32) NOT NULL';
-  $sql[4]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD shipping_class VARCHAR(32) NOT NULL';
-  $sql[5]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD billing_country_iso_code_2 CHAR(2) NOT NULL AFTER billing_country';
-  $sql[6]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD delivery_country_iso_code_2 CHAR(2) NOT NULL AFTER delivery_country';
-  $sql[7]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD billing_firstname VARCHAR(32) NOT NULL AFTER billing_name';
-  $sql[8]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD billing_lastname VARCHAR(32) NOT NULL AFTER billing_firstname';
-  $sql[9]  = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD delivery_firstname VARCHAR(32) NOT NULL AFTER delivery_name';
-  $sql[10] = 'ALTER TABLE ' . TABLE_ORDERS . ' ADD delivery_lastname VARCHAR(32) NOT NULL AFTER delivery_firstname';
-  $sql[11] = 'ALTER TABLE ' . TABLE_ORDERS . ' CHANGE payment_method payment_method VARCHAR(255) NOT NULL';
-  $sql[12] = 'ALTER TABLE ' . TABLE_ORDERS . ' CHANGE shipping_method shipping_method VARCHAR(255) NOT NULL';
+  $sql[1]  = 'ALTER TABLE ' .  $oosDBTable['products'] . ' ADD products_ean VARCHAR(128) AFTER products_id';
+  $sql[2]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD payment_class VARCHAR(32) NOT NULL';
+  $sql[3]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD shipping_method VARCHAR(32) NOT NULL';
+  $sql[4]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD shipping_class VARCHAR(32) NOT NULL';
+  $sql[5]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD billing_country_iso_code_2 CHAR(2) NOT NULL AFTER billing_country';
+  $sql[6]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD delivery_country_iso_code_2 CHAR(2) NOT NULL AFTER delivery_country';
+  $sql[7]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD billing_firstname VARCHAR(32) NOT NULL AFTER billing_name';
+  $sql[8]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD billing_lastname VARCHAR(32) NOT NULL AFTER billing_firstname';
+  $sql[9]  = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD delivery_firstname VARCHAR(32) NOT NULL AFTER delivery_name';
+  $sql[10] = 'ALTER TABLE ' . $oosDBTable['orders'] . ' ADD delivery_lastname VARCHAR(32) NOT NULL AFTER delivery_firstname';
+  $sql[11] = 'ALTER TABLE ' . $oosDBTable['orders'] . ' CHANGE payment_method payment_method VARCHAR(255) NOT NULL';
+  $sql[12] = 'ALTER TABLE ' . $oosDBTable['orders'] . ' CHANGE shipping_method shipping_method VARCHAR(255) NOT NULL';
   $sql[13] = 'CREATE TABLE cao_log ( id int(11) NOT NULL auto_increment, date datetime NOT NULL default "0000-00-00 00:00:00",'.
              'user varchar(64) NOT NULL default "", pw varchar(64) NOT NULL default "", method varchar(64) NOT NULL default "",'.
              'action varchar(64) NOT NULL default "", post_data mediumtext, get_data mediumtext, PRIMARY KEY  (id))';
@@ -1072,9 +1046,8 @@ function UpdateTables ()
 
 
 
-function xtc_try_upload ($file = '', $destination = '', 
-                         $permissions = '777', $extensions = '')
-{
+  function xtc_try_upload ($file = '', $destination = '', 
+                         $permissions = '777', $extensions = '') {
   $file_object = new upload($file, $destination, $permissions, $extensions);
   if ($file_object->filename != '') return $file_object; else return false;
 }
@@ -1082,8 +1055,7 @@ function xtc_try_upload ($file = '', $destination = '',
 
 require_once(DIR_FS_INC .'xtc_not_null.inc.php');
 
-function clear_string($value) 
-{
+  function clear_string($value) {
         $string=str_replace("'",'',$value);
         $string=str_replace(')','',$string);
         $string=str_replace('(','',$string);
@@ -1092,8 +1064,7 @@ function clear_string($value)
 }
 
 
-function xtc_RandomString($length) 
-{
+  function xtc_RandomString($length) {
         $chars = array( 'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J',  'k', 'K', 'l', 'L', 'm', 'M', 'n','N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T',  'u', 'U', 'v','V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0');
 
         $max_chars = count($chars) - 1;
@@ -1109,19 +1080,21 @@ function xtc_RandomString($length)
 }
 
 
-function xtc_create_password($pass) 
-{
+  function xtc_create_password($pass) {
   return md5($pass);
 }
 
 
-function xtc_remove_product($product_id) 
-{
-   	global $LangID, $customers_status_array;  //R Brym
-    $product_image_query = xtc_db_query("select products_image from " . TABLE_PRODUCTS . " where products_id = '" . xtc_db_input($product_id) . "'");
+  function xtc_remove_product($product_id) {
+    global $LangID, $customers_status_array;  //R Brym
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
+    $product_image_query = xtc_db_query("SELECT products_image FROM " .  $oosDBTable['products'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
     $product_image = xtc_db_fetch_array($product_image_query);
 
-    $duplicate_image_query = xtc_db_query("select count(*) as total from " . TABLE_PRODUCTS . " where products_image = '" . xtc_db_input($product_image['products_image']) . "'");
+    $duplicate_image_query = xtc_db_query("SELECT count(*) as total FROM " .  $oosDBTable['products'] . " WHERE products_image = '" . xtc_db_input($product_image['products_image']) . "'");
     $duplicate_image = xtc_db_fetch_array($duplicate_image_query);
 
     if ($duplicate_image['total'] < 2) {
@@ -1137,19 +1110,19 @@ function xtc_remove_product($product_id)
       // END CHANGES
     }
 
-    xtc_db_query("delete from " . TABLE_SPECIALS . " where products_id = '" . xtc_db_input($product_id) . "'");
-    xtc_db_query("delete from " . TABLE_PRODUCTS . " where products_id = '" . xtc_db_input($product_id) . "'");
-    xtc_db_query("delete from " . TABLE_PRODUCTS_TO_CATEGORIES . " where products_id = '" . xtc_db_input($product_id) . "'");
-    xtc_db_query("delete from " . TABLE_PRODUCTS_DESCRIPTION . " where products_id = '" . xtc_db_input($product_id) . "'");
-    xtc_db_query("delete from " . TABLE_PRODUCTS_ATTRIBUTES . " where products_id = '" . xtc_db_input($product_id) . "'");
-    xtc_db_query("delete from " . TABLE_CUSTOMERS_BASKET . " where products_id = '" . xtc_db_input($product_id) . "'");
-    xtc_db_query("delete from " . TABLE_CUSTOMERS_BASKET_ATTRIBUTES . " where products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['specials'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['products'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['products_to_categories'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['products_description'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['products_attributes'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['customers_basket']. " WHERE products_id = '" . xtc_db_input($product_id) . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['customers_basket_attributes'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
 
 
     // get statuses
     $customers_statuses_array = array(array());
 
-    $customers_statuses_query = xtc_db_query("select * from " . TABLE_CUSTOMERS_STATUS . " where language_id = '".$LangID."' order by customers_status_id");
+    $customers_statuses_query = xtc_db_query("SELECT * FROM " . $oosDBTable['customers_status'] . " WHERE language_id = '".$LangID."' ORDER BY customers_status_id");
 
           while ($customers_statuses = xtc_db_fetch_array($customers_statuses_query)) {
               $customers_statuses_array[] = array('id' => $customers_statuses['customers_status_id'],
@@ -1158,19 +1131,18 @@ function xtc_remove_product($product_id)
           }
 
           for ($i=0,$n=sizeof($customers_status_array);$i<$n;$i++) {
-              xtc_db_query("delete from personal_offers_by_customers_status_" . $i . " where products_id = '" . xtc_db_input($product_id) . "'");
+              xtc_db_query("delete FROM personal_offers_by_customers_status_" . $i . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
           }
 
-          $product_reviews_query = xtc_db_query("select reviews_id from " . TABLE_REVIEWS . " where products_id = '" . xtc_db_input($product_id) . "'");
+          $product_reviews_query = xtc_db_query("SELECT reviews_id FROM " . $oosDBTable['reviews'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
           while ($product_reviews = xtc_db_fetch_array($product_reviews_query)) {
-            xtc_db_query("delete from " . TABLE_REVIEWS_DESCRIPTION . " where reviews_id = '" . $product_reviews['reviews_id'] . "'");
+            xtc_db_query("delete FROM " . $oosDBTable['reviews_description'] . " WHERE reviews_id = '" . $product_reviews['reviews_id'] . "'");
           }
-          xtc_db_query("delete from " . TABLE_REVIEWS . " where products_id = '" . xtc_db_input($product_id) . "'");
+          xtc_db_query("delete FROM " . $oosDBTable['reviews'] . " WHERE products_id = '" . xtc_db_input($product_id) . "'");
 }
 
 
-function ManufacturersImageUpload ()
-{
+  function ManufacturersImageUpload () {
 
   if ($manufacturers_image = &xtc_try_upload('manufacturers_image',DIR_FS_CATALOG.DIR_WS_IMAGES,'777', '', true)) 
   {
@@ -1184,8 +1156,7 @@ function ManufacturersImageUpload ()
 }
 
 
-function CategoriesImageUpload ()
-{
+  function CategoriesImageUpload () {
 
   if ( $categories_image = &xtc_try_upload('categories_image',DIR_FS_CATALOG.DIR_WS_IMAGES.'categories/','777', '', true)) 
   {
@@ -1199,8 +1170,7 @@ function CategoriesImageUpload ()
 }
 
 
-function ProductsImageUpload ()
-{
+  function ProductsImageUpload () {
 
   if ($products_image = &xtc_try_upload('products_image',DIR_FS_CATALOG.DIR_WS_ORIGINAL_IMAGES,'777', '', true)) 
   {
@@ -1228,20 +1198,22 @@ function ProductsImageUpload ()
 
 
 
-function ManufacturersUpdate ()
-{
+  function ManufacturersUpdate () {
   $manufacturers_id = xtc_db_prepare_input($_POST['mID']);
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
   if (isset($manufacturers_id))
   {
     // Hersteller laden
-    $count_query = xtc_db_query("select 
+    $count_query = xtc_db_query("SELECT 
                                   manufacturers_id,
                                manufacturers_name,
                                manufacturers_image,
                                date_added,
-                               last_modified from " . TABLE_MANUFACTURERS . "
-                               where manufacturers_id='" . $manufacturers_id . "'");
+                               last_modified FROM " . $oosDBTable['manufacturers'] . "
+                               WHERE manufacturers_id='" . $manufacturers_id . "'");
 
  if ($manufacturer = xtc_db_fetch_array($count_query))
  {
@@ -1268,7 +1240,7 @@ $last_modified       = $manufacturer['last_modified'];
       $insert_sql_data = array('date_added' => 'now()');
       $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
 
-      xtc_db_perform(TABLE_MANUFACTURERS, $sql_data_array);
+      xtc_db_perform($oosDBTable['manufacturers'], $sql_data_array);
       $products_id = mysql_insert_id();
     }
     elseif ($exists==1) //Update
@@ -1277,9 +1249,9 @@ $last_modified       = $manufacturer['last_modified'];
       $update_sql_data = array('last_modified' => 'now()');
       $sql_data_array = array_merge($sql_data_array, $update_sql_data);
 
-      xtc_db_perform(TABLE_MANUFACTURERS, $sql_data_array, 'update', 'manufacturers_id = \'' . xtc_db_input($manufacturers_id) . '\'');
+      xtc_db_perform($oosDBTable['manufacturers'], $sql_data_array, 'update', 'manufacturers_id = \'' . xtc_db_input($manufacturers_id) . '\'');
     }
-    $languages_query = xtc_db_query("select languages_id, name, code, image, directory from " . TABLE_LANGUAGES . " order by sort_order");
+    $languages_query = xtc_db_query("SELECT languages_id, name, code, image, directory FROM " . $oosDBTable['languages'] . " ORDER BY sort_order");
     while ($languages = xtc_db_fetch_array($languages_query)) 
     {
       $languages_array[] = array('id' => $languages['languages_id'],
@@ -1294,8 +1266,8 @@ $last_modified       = $manufacturer['last_modified'];
       $language_id = $languages[$i]['id'];
 
       // Bestehende Daten laden
-      $desc_query = xtc_db_query("select manufacturers_id,languages_id,manufacturers_url,url_clicked,date_last_click from " .
-                           TABLE_MANUFACTURERS_INFO . " where manufacturers_id='" . $manufacturers_id . "' and languages_id='" . $language_id . "'");
+      $desc_query = xtc_db_query("SELECT manufacturers_id,languages_id,manufacturers_url,url_clicked,date_last_click FROM " .
+                           $oosDBTable['manufacturers_info']. " WHERE manufacturers_id='" . $manufacturers_id . "' and languages_id='" . $language_id . "'");
       if ($desc = xtc_db_fetch_array($desc_query))
       {
         $manufacturers_url = $desc['manufacturers_url'];
@@ -1315,11 +1287,11 @@ if ($exists==0) // Insert
   $insert_sql_data = array('manufacturers_id' => $products_id,
                            'languages_id' => $language_id);
   $sql_data_array = /*xtc_*/array_merge($sql_data_array, $insert_sql_data);
-  xtc_db_perform(TABLE_MANUFACTURERS_INFO, $sql_data_array);
+  xtc_db_perform($oosDBTable['manufacturers']_INFO, $sql_data_array);
 }
 elseif ($exists==1) // Update
 {
-  xtc_db_perform(TABLE_MANUFACTURERS_INFO, $sql_data_array, 'update', 'manufacturers_id = \'' . xtc_db_input($manufacturers_id) . '\' and languages_id = \'' . $language_id . '\'');
+  xtc_db_perform($oosDBTable['manufacturers']_INFO, $sql_data_array, 'update', 'manufacturers_id = \'' . xtc_db_input($manufacturers_id) . '\' and languages_id = \'' . $language_id . '\'');
 }
     }
     print_xml_status (0, $_POST['action'], 'OK', $mode ,'MANUFACTURERS_ID', $mID);
@@ -1332,17 +1304,19 @@ elseif ($exists==1) // Update
 
 
 
-function ManufacturersErase ()
-{
+  function ManufacturersErase () {
   $ManID  = xtc_db_prepare_input($_POST['mID']);
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
   if (isset($ManID))
   {
     // Hersteller loeschen
-    xtc_db_query("delete from " . TABLE_MANUFACTURERS . " where manufacturers_id = '" . (int)$ManID . "'");
-    xtc_db_query("delete from " . TABLE_MANUFACTURERS_INFO . " where manufacturers_id = '" . (int)$ManID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['manufacturers'] . " WHERE manufacturers_id = '" . (int)$ManID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['manufacturers_info']. " WHERE manufacturers_id = '" . (int)$ManID . "'");
     // Herstellerverweis in den Artikeln loeschen
-    xtc_db_query("update " . TABLE_PRODUCTS . " set manufacturers_id = '' where manufacturers_id = '" . (int)$ManID . "'");
+    xtc_db_query("update " .  $oosDBTable['products'] . " set manufacturers_id = '' WHERE manufacturers_id = '" . (int)$ManID . "'");
 
     print_xml_status (0, $_POST['action'], 'OK', '', '', '');
   }
@@ -1354,11 +1328,13 @@ function ManufacturersErase ()
 
 
 
-function ProductsUpdate ()
-{
+  function ProductsUpdate () {
   global $LangID;
 
-  $languages_query = xtc_db_query("select languages_id, name, code, image, directory from " . TABLE_LANGUAGES . " order by sort_order");
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
+  $languages_query = xtc_db_query("SELECT languages_id, name, code, image, directory FROM " . $oosDBTable['languages'] . " ORDER BY sort_order");
   while ($languages = xtc_db_fetch_array($languages_query)) 
   {
     $languages_array[] = array('id' => $languages['languages_id'],
@@ -1370,7 +1346,7 @@ function ProductsUpdate ()
   $products_id = xtc_db_prepare_input($_POST['pID']);
 
   // product laden
-  $count_query = xtc_db_query("select products_quantity,
+  $count_query = xtc_db_query("SELECT products_quantity,
                             products_model,
                             products_image,
                             products_price,
@@ -1381,8 +1357,8 @@ function ProductsUpdate ()
                             products_fsk18,
                             products_shippingtime,
                             products_tax_class_id,
-                            manufacturers_id from " . TABLE_PRODUCTS . "
-                            where products_id='" . $products_id . "'");
+                            manufacturers_id FROM " .  $oosDBTable['products'] . "
+                            WHERE products_id='" . $products_id . "'");
 
   if ($product = xtc_db_fetch_array($count_query))
   {
@@ -1458,7 +1434,7 @@ function ProductsUpdate ()
   {
     // set groupaccees
 
-    $permission_sql = 'show columns from ' . TABLE_PRODUCTS . ' like "group_permission_%"';
+    $permission_sql = 'show columns FROM ' .  $oosDBTable['products'] . ' like "group_permission_%"';
     $permission_query = xtc_db_query ($permission_sql);
 
     if (xtc_db_num_rows($permission_query))
@@ -1479,12 +1455,12 @@ function ProductsUpdate ()
     {
       // XTC bis 3.0.3
       $customers_statuses_array = array(array());
-      $customers_statuses_query = xtc_db_query("select customers_status_id,
+      $customers_statuses_query = xtc_db_query("SELECT customers_status_id,
                                              customers_status_name
-                                             from " . TABLE_CUSTOMERS_STATUS . "
-                                             where language_id = '".$LangID."' order by
+                                             FROM " . $oosDBTable['customers_status'] . "
+                                             WHERE language_id = '".$LangID."' ORDER BY
                                              customers_status_id");
-      $i=1;        // this is changed from 0 to 1 in cs v1.2
+      $i=1;        // this is changed FROM 0 to 1 in cs v1.2
       while ($customers_statuses = xtc_db_fetch_array($customers_statuses_query))
       {
         $i=$customers_statuses['customers_status_id'];
@@ -1508,7 +1484,7 @@ function ProductsUpdate ()
    $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
 
     // insert data
-    xtc_db_perform(TABLE_PRODUCTS, $sql_data_array);
+    xtc_db_perform( $oosDBTable['products'], $sql_data_array);
 
     $products_id = mysql_insert_id();
 
@@ -1520,7 +1496,7 @@ function ProductsUpdate ()
     $sql_data_array = array_merge($sql_data_array, $update_sql_data);
 
     // update data
-    xtc_db_perform(TABLE_PRODUCTS, $sql_data_array, 'update', 'products_id = \'' . xtc_db_input($products_id) . '\'');
+    xtc_db_perform( $oosDBTable['products'], $sql_data_array, 'update', 'products_id = \'' . xtc_db_input($products_id) . '\'');
   }
 
   $languages = $languages_array;
@@ -1529,7 +1505,7 @@ function ProductsUpdate ()
     $language_id = $languages[$i]['id'];
 
     // Bestehende Daten laden
-    $desc_query = xtc_db_query("select
+    $desc_query = xtc_db_query("SELECT
                              products_id,
                              products_name,
                              products_description,
@@ -1540,9 +1516,9 @@ function ProductsUpdate ()
                              products_url,
                              products_viewed,
                              language_id
-                             from " .
-                             TABLE_PRODUCTS_DESCRIPTION . "
-                             where products_id='" . $products_id . "'
+                             FROM " .
+                              $oosDBTable['products_description'] . "
+                             WHERE products_id='" . $products_id . "'
                              and language_id='" . $language_id . "'");
 
     if ($desc = xtc_db_fetch_array($desc_query))
@@ -1583,12 +1559,12 @@ function ProductsUpdate ()
                                'language_id' => $language_id);
 
       $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
-      xtc_db_perform(TABLE_PRODUCTS_DESCRIPTION, $sql_data_array);
+      xtc_db_perform( $oosDBTable['products_description'], $sql_data_array);
     }
     elseif (($exists==1)and($language_id==$LangID)) // Update
     {
       // Nur die Daten in der akt. Sprache aendern !
-      xtc_db_perform(TABLE_PRODUCTS_DESCRIPTION, $sql_data_array, 'update', 'products_id = \'' . xtc_db_input($products_id) . '\' and language_id = \'' . $language_id . '\'');
+      xtc_db_perform( $oosDBTable['products_description'], $sql_data_array, 'update', 'products_id = \'' . xtc_db_input($products_id) . '\' and language_id = \'' . $language_id . '\'');
     }
   }
   if (file_exists('cao_produpd_2.php')) { include('cao_produpd_2.php'); }
@@ -1598,14 +1574,17 @@ function ProductsUpdate ()
 
 
 
-function ProductsErase ()
-{
+  function ProductsErase () {
 
   $ProdID  = xtc_db_prepare_input($_POST['prodid']);
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
   if (isset($ProdID))
   {
     // ProductsToCategieries loeschen bei denen die products_id = ... ist
-    $res1 = xtc_db_query("delete from " . TABLE_PRODUCTS_TO_CATEGORIES . " where products_id='" . $ProdID . "'");
+    $res1 = xtc_db_query("delete FROM " . $oosDBTable['products_to_categories'] . " WHERE products_id='" . $ProdID . "'");
 
     // Product loeschen
     xtc_remove_product($ProdID);
@@ -1622,8 +1601,7 @@ function ProductsErase ()
 
 
 
-function ProductsSpecialPriceUpdate ()
-{
+  function ProductsSpecialPriceUpdate () {
 
   $ProdID  = xtc_db_prepare_input($_POST['prodid']);
 
@@ -1631,14 +1609,17 @@ function ProductsSpecialPriceUpdate ()
   $Status = xtc_db_prepare_input($_POST['status']);
   $Expire = xtc_db_prepare_input($_POST['expired']);
 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
   if (isset($ProdID))
   {
     /*
     1. Ermitteln ob Produkt bereits einen Spezialpreis hat
     2. wenn JA -> Update / NEIN -> INSERT		    
     */
-    $sp_sql = "select specials_id from " . TABLE_SPECIALS . " " .
-              "where products_id='" . (int)$ProdID . "'";
+    $sp_sql = "SELECT specials_id FROM " . $oosDBTable['specials'] . " " .
+              "WHERE products_id='" . (int)$ProdID . "'";
     $sp_query = xtc_db_query($sql);
 
     if ($sp = xtc_db_fetch_array($sp_query))
@@ -1647,11 +1628,11 @@ function ProductsSpecialPriceUpdate ()
       $SpecialID = $sp['specials_id'];
 
       xtc_db_query(
-              "update " . TABLE_SPECIALS .
+              "update " . $oosDBTable['specials'] .
               " set specials_new_products_price = '" . $Price . "'," .
               " specials_last_modified = now()," .
               " expires_date = '" . $Expire .
-              "' where specials_id = '" . (int)$SpecialID. "'");
+              "' WHERE specials_id = '" . (int)$SpecialID. "'");
 
       print_xml_status (0, $_POST['action'], 'OK', 'UPDATE', '', '');
     }
@@ -1659,7 +1640,7 @@ function ProductsSpecialPriceUpdate ()
     {
       // Neuanlage
       xtc_db_query(
-              "insert into " . TABLE_SPECIALS .
+              "insert into " . $oosDBTable['specials'] .
               " (products_id, specials_new_products_price, specials_date_added, expires_date, status) " .
               " values ('" . (int)$ProdID . "', '" . $Price . "', now(), '" . $Expire . "', '1')");
 
@@ -1674,13 +1655,16 @@ function ProductsSpecialPriceUpdate ()
 
 
 
-function ProductsSpecialPriceErase ()
-{
+  function ProductsSpecialPriceErase () {
 
   $ProdID  = xtc_db_prepare_input($_POST['prodid']);
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
   if (isset($ProdID))
   {
-    xtc_db_query("delete from " . TABLE_SPECIALS . " where products_id = '" . (int)$ProdID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['specials'] . " WHERE products_id = '" . (int)$ProdID . "'");
     print_xml_status (0, $_POST['action'], 'OK', '', '', '');
   }
     else
@@ -1691,18 +1675,20 @@ function ProductsSpecialPriceErase ()
 
 
 
-function CategoriesUpdate ()
-{
+  function CategoriesUpdate () {
   global $LangID;
 
   $CatID    = xtc_db_prepare_input($_POST['catid']);
   $ParentID = xtc_db_prepare_input($_POST['parentid']);
 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
   if (isset($ParentID) && isset($CatID))
   {
     // product laden
-    $SQL = "select categories_id, parent_id, date_added, sort_order, categories_image " .
-           "from " . TABLE_CATEGORIES . " where categories_id='" . $CatID . "'";
+    $SQL = "SELECT categories_id, parent_id, date_added, sort_order, categories_image " .
+           "FROM " . $oosDBTable['categories'] . " WHERE categories_id='" . $CatID . "'";
 
 
     $count_query = xtc_db_query($SQL);
@@ -1712,9 +1698,9 @@ function CategoriesUpdate ()
 
       $ParentID = $categorie['parent_id'];
       $Sort     = $categorie['sort_order'];
-      $Image    = $categorie['categories_image'];   
+      $Image    = $categorie['categories_image'];
     }
-    else $exists = 0; 
+    else $exists = 0;
 
     // Variablen nur ueberschreiben wenn als Parameter vorhanden !!!
     if (isset($_POST['parentid'])) $ParentID = xtc_db_prepare_input($_POST['parentid']);
@@ -1733,7 +1719,7 @@ function CategoriesUpdate ()
       $mode='APPEND';
 
       // set groupaccees
-      $permission_sql = 'show columns from ' . TABLE_CATEGORIES . ' like "group_permission_%"';
+      $permission_sql = 'show columns FROM ' . $oosDBTable['categories'] . ' like "group_permission_%"';
       $permission_query = xtc_db_query ($permission_sql);
 
       if (xtc_db_num_rows($permission_query))
@@ -1753,12 +1739,12 @@ function CategoriesUpdate ()
       {
         // XTC bis 3.0.3
         $customers_statuses_array = array(array());
-        $customers_statuses_query = xtc_db_query("select customers_status_id,
+        $customers_statuses_query = xtc_db_query("SELECT customers_status_id,
                                              customers_status_name
-                                               from " . TABLE_CUSTOMERS_STATUS . "
-                                               where language_id = '".$LangID."' order by
+                                               FROM " . $oosDBTable['customers_status'] . "
+                                               WHERE language_id = '".$LangID."' ORDER BY
                                                customers_status_id");
-        $i=1;        // this is changed from 0 to 1 in cs v1.2
+        $i=1;        // this is changed FROM 0 to 1 in cs v1.2
         while ($customers_statuses = xtc_db_fetch_array($customers_statuses_query)) 
         {
           $i=$customers_statuses['customers_status_id'];
@@ -1777,18 +1763,18 @@ function CategoriesUpdate ()
 
       $sql_data_array = /*xtc_*/array_merge($sql_data_array, $insert_sql_data);
 
-      xtc_db_perform(TABLE_CATEGORIES, $sql_data_array);
-    } 
+      xtc_db_perform($oosDBTable['categories'], $sql_data_array);
+    }
     elseif ($exists==1) //Update
     {
       $mode='UPDATE';
 
-      xtc_db_perform(TABLE_CATEGORIES, $sql_data_array, 'update', 'categories_id = \'' . xtc_db_input($CatID) . '\'');
+      xtc_db_perform($oosDBTable['categories'], $sql_data_array, 'update', 'categories_id = \'' . xtc_db_input($CatID) . '\'');
     }
 
     //$languages = xtc_get_languages();
 
-    $languages_query = xtc_db_query("select languages_id, name, code, image, directory from " . TABLE_LANGUAGES . " order by sort_order");
+    $languages_query = xtc_db_query("SELECT languages_id, name, code, image, directory FROM " . $oosDBTable['languages'] . " ORDER BY sort_order");
     while ($languages = xtc_db_fetch_array($languages_query)) 
     {
       $languages_array[] = array('id' => $languages['languages_id'],
@@ -1805,10 +1791,10 @@ function CategoriesUpdate ()
       $language_id = $languages[$i]['id'];
 
       // Bestehende Daten laden
-      $SQL = "select categories_id,language_id,categories_name,categories_description,categories_heading_title,".
+      $SQL = "SELECT categories_id,language_id,categories_name,categories_description,categories_heading_title,".
              "categories_meta_title,categories_meta_description,categories_meta_keywords";
 
-      $desc_query = xtc_db_query($SQL . " from " . TABLE_CATEGORIES_DESCRIPTION . " where categories_id='" . $CatID . "' and language_id='" . $language_id . "'");
+      $desc_query = xtc_db_query($SQL . " FROM " . $oosDBTable['categories_description'] . " WHERE categories_id='" . $CatID . "' and language_id='" . $language_id . "'");
       if ($desc = xtc_db_fetch_array($desc_query))
       {
         $categories_name             = $desc['categories_name'];
@@ -1839,12 +1825,12 @@ if ($exists==0) // Insert
                                  'language_id' => $language_id);
 
         $sql_data_array = /*xtc_*/array_merge($sql_data_array, $insert_sql_data);
-        xtc_db_perform(TABLE_CATEGORIES_DESCRIPTION, $sql_data_array);
+        xtc_db_perform($oosDBTable['categories_description'], $sql_data_array);
       }
       elseif (($exists==1)and($language_id==$LangID)) // Update
       {
         // Nur 1 Sprache aktualisieren
-        xtc_db_perform(TABLE_CATEGORIES_DESCRIPTION, $sql_data_array, 'update', 'categories_id = \'' . xtc_db_input($CatID) . '\' and language_id = \'' . $language_id . '\'');
+        xtc_db_perform($oosDBTable['categories_description'], $sql_data_array, 'update', 'categories_id = \'' . xtc_db_input($CatID) . '\' and language_id = \'' . $language_id . '\'');
       }
     }
     print_xml_status (0, $_POST['action'], 'OK', $mode, '', '');
@@ -1857,19 +1843,21 @@ if ($exists==0) // Insert
 
 
 
-function CategoriesErase ()
-{
+  function CategoriesErase () {
 
   $CatID  = xtc_db_prepare_input($_POST['catid']);
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
   if (isset($CatID))
   {
     // Categorie loeschen
-    $res1 = xtc_db_query("delete from " . TABLE_CATEGORIES . " where categories_id='" . $CatID . "'");
+    $res1 = xtc_db_query("delete FROM " . $oosDBTable['categories'] . " WHERE categories_id='" . $CatID . "'");
     // ProductsToCategieries loeschen bei denen die Categorie = ... ist
-    $res2 = xtc_db_query("delete from " . TABLE_PRODUCTS_TO_CATEGORIES . " where categories_id='" . $CatID . "'");
+    $res2 = xtc_db_query("delete FROM " . $oosDBTable['products_to_categories'] . " WHERE categories_id='" . $CatID . "'");
     // CategieriesDescription loeschenm bei denen die Categorie = ... ist
-    $res3 = xtc_db_query("delete from " . TABLE_CATEGORIES_DESCRIPTION . " where categories_id='" . $CatID . "'");
+    $res3 = xtc_db_query("delete FROM " . $oosDBTable['categories_description'] . " WHERE categories_id='" . $CatID . "'");
 
     print_xml_status (0, $_POST['action'], 'OK', '', 'SQL_RES1', $res1);
   }
@@ -1880,15 +1868,17 @@ function CategoriesErase ()
 }
 
 
-function Prod2CatUpdate ()
-{
+  function Prod2CatUpdate () {
 
   $ProdID = xtc_db_prepare_input($_POST['prodid']);
   $CatID  = xtc_db_prepare_input($_POST['catid']);
 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
   if (isset($ProdID) && isset($CatID))
   {
-    $res = xtc_db_query("replace into " . TABLE_PRODUCTS_TO_CATEGORIES . " (products_id, categories_id) Values ('" . $ProdID ."', '" . $CatID . "')");
+    $res = xtc_db_query("replace into " . $oosDBTable['products_to_categories'] . " (products_id, categories_id) Values ('" . $ProdID ."', '" . $CatID . "')");
     print_xml_status (0, $_POST['action'], 'OK', '', 'SQL_RES', $res);
   }
     else
@@ -1898,15 +1888,17 @@ function Prod2CatUpdate ()
 }
 
 
-function Prod2CatErase ()
-{
+  function Prod2CatErase () {
 
   $ProdID = xtc_db_prepare_input($_POST['prodid']);
   $CatID  = xtc_db_prepare_input($_POST['catid']);
 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
   if (isset($ProdID) && isset($CatID))
   {
-    $res = xtc_db_query("delete from " . TABLE_PRODUCTS_TO_CATEGORIES . " where products_id='" . $ProdID ."' and categories_id='" . $CatID . "'");
+    $res = xtc_db_query("delete FROM " . $oosDBTable['products_to_categories'] . " WHERE products_id='" . $ProdID ."' and categories_id='" . $CatID . "'");
     print_xml_status (0, $_POST['action'], 'OK', '', 'SQL_RES', $res);
   }
     else
@@ -1916,11 +1908,13 @@ function Prod2CatErase ()
 }
 
 
-function OrderUpdate ()
-{
+  function OrderUpdate () {
   global $LangID;
 
   $schema = '<?xml version="1.0" encoding="' . CHARSET . '"?>' . "\n" . "\n";
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
   if ((isset($_POST['order_id'])) && (isset($_POST['status'])))
   {
@@ -1930,27 +1924,27 @@ function OrderUpdate ()
     $comments = xtc_db_prepare_input($_POST['comments']);
 	
     //Status berprfen
-    $check_status_query = xtc_db_query("select * from " . TABLE_ORDERS . " where orders_id = '" . xtc_db_input($oID) . "'");
+    $check_status_query = xtc_db_query("SELECT * FROM " . $oosDBTable['orders'] . " WHERE orders_id = '" . xtc_db_input($oID) . "'");
     if ($check_status = xtc_db_fetch_array($check_status_query))
     {
       if ($check_status['orders_status'] != $status || $comments != '')
       {
-        xtc_db_query("update " . TABLE_ORDERS . " set orders_status = '" . xtc_db_input($status) . "', last_modified = now() where orders_id = '" . xtc_db_input($oID) . "'");
+        xtc_db_query("update " . $oosDBTable['orders'] . " set orders_status = '" . xtc_db_input($status) . "', last_modified = now() WHERE orders_id = '" . xtc_db_input($oID) . "'");
         $customer_notified = '0';
         if ($_POST['notify'] == 'on')
         {
           // Falls eine Sprach ID zur Order existiert die Emailbest�igung in dieser Sprache ausfhren
           if (isset($check_status['orders_language_id']) && $check_status['orders_language_id'] > 0 ) 
           {
-            $orders_status_query = xtc_db_query("select orders_status_id, orders_status_name from " . TABLE_ORDERS_STATUS . " where language_id = '" . $check_status['orders_language_id'] . "'");
+            $orders_status_query = xtc_db_query("SELECT orders_status_id, orders_status_name FROM " . $oosDBTable['orders']_STATUS . " WHERE language_id = '" . $check_status['orders_language_id'] . "'");
             if (xtc_db_num_rows($orders_status_query) == 0) 
             {
-              $orders_status_query = xtc_db_query("select orders_status_id, orders_status_name from " . TABLE_ORDERS_STATUS . " where language_id = '" . $languages_id . "'");
+              $orders_status_query = xtc_db_query("SELECT orders_status_id, orders_status_name FROM " . $oosDBTable['orders']_STATUS . " WHERE language_id = '" . $languages_id . "'");
             }
           } 
             else 
           {
-            $orders_status_query = xtc_db_query("select orders_status_id, orders_status_name from " . TABLE_ORDERS_STATUS . " where language_id = '" . $languages_id . "'");
+            $orders_status_query = xtc_db_query("SELECT orders_status_id, orders_status_name FROM " . $oosDBTable['orders']_STATUS . " WHERE language_id = '" . $languages_id . "'");
           }
           $orders_statuses = array();
           $orders_status_array = array();
@@ -1961,11 +1955,11 @@ function OrderUpdate ()
             $orders_status_array[$orders_status['orders_status_id']] = $orders_status['orders_status_name'];
           }
           // status query
-          $orders_status_query = xtc_db_query("select orders_status_name from " . TABLE_ORDERS_STATUS . " where language_id = '" . $LangID . "' and orders_status_id='".$status."'");
+          $orders_status_query = xtc_db_query("SELECT orders_status_name FROM " . $oosDBTable['orders']_STATUS . " WHERE language_id = '" . $LangID . "' and orders_status_id='".$status."'");
           $o_status=xtc_db_fetch_array($orders_status_query);
           $o_status=$o_status['orders_status_name'];
 
-          //ok lets generate the html/txt mail from Template
+          //ok lets generate the html/txt mail FROM Template
           if ($_POST['notify_comments'] == 'on')
           {
             $notify_comments = sprintf(EMAIL_TEXT_COMMENTS_UPDATE, $comments) . "\n\n";
@@ -2019,7 +2013,7 @@ function OrderUpdate ()
 
           $customer_notified = '1';
         }
-        xtc_db_query("insert into " . TABLE_ORDERS_STATUS_HISTORY . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . xtc_db_input($oID) . "', '" . xtc_db_input($status) . "', now(), '" . $customer_notified . "', '" . xtc_db_input($comments)  . "')");
+        xtc_db_query("insert into " . $oosDBTable['orders_status_history'] . " (orders_id, orders_status_id, date_added, customer_notified, comments) values ('" . xtc_db_input($oID) . "', '" . xtc_db_input($status) . "', now(), '" . $customer_notified . "', '" . xtc_db_input($comments)  . "')");
         $schema .= '<STATUS>' . "\n" .
                    '<STATUS_DATA>' . "\n" .
                    '<ORDER_ID>' . $oID . '</ORDER_ID>' . "\n" .
@@ -2072,9 +2066,11 @@ function OrderUpdate ()
 }
 
 
-function CustomersUpdate ()
-{
+  function CustomersUpdate () {
   global $Lang_folder;
+
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
 
   $customers_id = -1;
   // include PW function
@@ -2083,9 +2079,8 @@ function CustomersUpdate ()
   if (isset($_POST['cID'])) $customers_id = xtc_db_prepare_input($_POST['cID']);
 
   // security check, if user = admin, dont allow to perform changes
-  if ($customers_id!=-1) 
-  {
-    $sec_query=xtc_db_query("SELECT customers_status FROM ".TABLE_CUSTOMERS." where customers_id='".$customers_id."'");
+  if ($customers_id!=-1) {
+    $sec_query=xtc_db_query("SELECT customers_status FROM ".$oosDBTable['customers']." WHERE customers_id='".$customers_id."'");
     $sec_data=xtc_db_fetch_array($sec_query);
     if ($sec_data['customers_status']==0) 
     {
@@ -2116,22 +2111,22 @@ function CustomersUpdate ()
   if (isset($_POST['customers_gender'])) $sql_address_data_array['entry_gender'] = $_POST['customers_gender'];
   if (isset($_POST['customers_country_id'])) $country_code = $_POST['customers_country_id'];
 
-  $country_query = "SELECT countries_id FROM ".TABLE_COUNTRIES." WHERE countries_iso_code_2 = '".$country_code ."' LIMIT 1";
+  $country_query = "SELECT countries_id FROM ".$oosDBTable['countries']." WHERE countries_iso_code_2 = '".$country_code ."' LIMIT 1";
   $country_result = xtc_db_query($country_query);
   $row = xtc_db_fetch_array($country_result);
   $sql_address_data_array['entry_country_id'] = $row['countries_id'];
 
-  $count_query = xtc_db_query("SELECT count(*) as count FROM " . TABLE_CUSTOMERS . " WHERE customers_id='" . (int)$customers_id . "' LIMIT 1");
+  $count_query = xtc_db_query("SELECT count(*) as count FROM " . $oosDBTable['customers'] . " WHERE customers_id='" . (int)$customers_id . "' LIMIT 1");
   $check = xtc_db_fetch_array($count_query);
 
   if ($check['count'] > 0)
   {
     $mode = 'UPDATE';
-    $address_book_result = xtc_db_query("SELECT customers_default_address_id FROM ".TABLE_CUSTOMERS." WHERE customers_id = '". (int)$customers_id ."' LIMIT 1");
+    $address_book_result = xtc_db_query("SELECT customers_default_address_id FROM ".$oosDBTable['customers']." WHERE customers_id = '". (int)$customers_id ."' LIMIT 1");
     $customer = xtc_db_fetch_array($address_book_result);
-    xtc_db_perform(TABLE_CUSTOMERS, $sql_customers_data_array, 'update', "customers_id = '" . xtc_db_input($customers_id) . "' LIMIT 1");
-    xtc_db_perform(TABLE_ADDRESS_BOOK, $sql_address_data_array, 'update', "customers_id = '" . xtc_db_input($customers_id) . "' AND address_book_id = '".$customer['customers_default_address_id']."' LIMIT 1");
-    xtc_db_query("update " . TABLE_CUSTOMERS_INFO . " set customers_info_date_account_last_modified = now() where customers_info_id = '" . (int)$customers_id . "'  LIMIT 1");
+    xtc_db_perform($oosDBTable['customers'], $sql_customers_data_array, 'update', "customers_id = '" . xtc_db_input($customers_id) . "' LIMIT 1");
+    xtc_db_perform($oosDBTable['address_book'], $sql_address_data_array, 'update', "customers_id = '" . xtc_db_input($customers_id) . "' AND address_book_id = '".$customer['customers_default_address_id']."' LIMIT 1");
+    xtc_db_query("update " .  $oosDBTable['customers_info'] . " set customers_info_date_account_last_modified = now() WHERE customers_info_id = '" . (int)$customers_id . "'  LIMIT 1");
   }
     else
   {
@@ -2142,14 +2137,14 @@ function CustomersUpdate ()
       $pw=xtc_RandomString(8);
       $sql_customers_data_array['customers_password']=xtc_create_password($pw);
     }
-    xtc_db_perform(TABLE_CUSTOMERS, $sql_customers_data_array);
+    xtc_db_perform($oosDBTable['customers'], $sql_customers_data_array);
     $customers_id = xtc_db_insert_id();
     $sql_address_data_array['customers_id'] = $customers_id;
-    xtc_db_perform(TABLE_ADDRESS_BOOK, $sql_address_data_array);
+    xtc_db_perform($oosDBTable['address_book'], $sql_address_data_array);
     $address_id = xtc_db_insert_id();
-    xtc_db_query("update " . TABLE_CUSTOMERS . " set customers_default_address_id = '" . (int)$address_id . "' where customers_id = '" . (int)$customers_id . "'");
-    xtc_db_query("update " . TABLE_CUSTOMERS . " set customers_status = '" . STANDARD_GROUP . "' where customers_id = '" . (int)$customers_id . "'");
-    xtc_db_query("insert into " . TABLE_CUSTOMERS_INFO . " (customers_info_id, customers_info_number_of_logons, customers_info_date_account_created) values ('" . (int)$customers_id . "', '0', now())");
+    xtc_db_query("update " . $oosDBTable['customers'] . " set customers_default_address_id = '" . (int)$address_id . "' WHERE customers_id = '" . (int)$customers_id . "'");
+    xtc_db_query("update " . $oosDBTable['customers'] . " set customers_status = '" . STANDARD_GROUP . "' WHERE customers_id = '" . (int)$customers_id . "'");
+    xtc_db_query("insert into " .  $oosDBTable['customers_info'] . " (customers_info_id, customers_info_number_of_logons, customers_info_date_account_created) values ('" . (int)$customers_id . "', '0', now())");
   }
 
   if (SEND_ACCOUNT_MAIL==true && $mode=='APPEND' && $sql_customers_data_array['customers_email_address']!='') 
@@ -2203,12 +2198,14 @@ function CustomersUpdate ()
 }
 
 
-function CustomersErase ()
-{
+  function CustomersErase () {
 
   $cID  = xtc_db_prepare_input($_POST['cID']);
 
-  $sec_query=xtc_db_query("SELECT customers_status FROM ".TABLE_CUSTOMERS." where customers_id='".$cID."'");
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
+  $sec_query=xtc_db_query("SELECT customers_status FROM ".$oosDBTable['customers']." WHERE customers_id='".$cID."'");
   $sec_data=xtc_db_fetch_array($sec_query);
   if ($sec_data['customers_status']==0) 
   {
@@ -2217,13 +2214,13 @@ function CustomersErase ()
   }
   if (isset($cID))
   {
-    xtc_db_query("update " . TABLE_REVIEWS . " set customers_id = null where customers_id = '" .  $cID . "'");
-    xtc_db_query("delete from " . TABLE_ADDRESS_BOOK . " where customers_id = '" . $cID . "'");
-    xtc_db_query("delete from " . TABLE_CUSTOMERS . " where customers_id = '" .$cID . "'");
-    xtc_db_query("delete from " . TABLE_CUSTOMERS_INFO . " where customers_info_id = '" . $cID. "'");
-    xtc_db_query("delete from " . TABLE_CUSTOMERS_BASKET . " where customers_id = '" . $cID . "'");
-    xtc_db_query("delete from " . TABLE_CUSTOMERS_BASKET_ATTRIBUTES . " where customers_id = '" . $cID . "'");
-    xtc_db_query("delete from " . TABLE_WHOS_ONLINE . " where customer_id = '" . $cID . "'");
+    xtc_db_query("update " . $oosDBTable['reviews'] . " set customers_id = null WHERE customers_id = '" .  $cID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['address_book'] . " WHERE customers_id = '" . $cID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['customers'] . " WHERE customers_id = '" .$cID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['customers_info'] . " WHERE customers_info_id = '" . $cID. "'");
+    xtc_db_query("delete FROM " . $oosDBTable['customers_basket']. " WHERE customers_id = '" . $cID . "'");
+    xtc_db_query("delete FROM " . $oosDBTable['customers_basket_attributes'] . " WHERE customers_id = '" . $cID . "'");
+    xtc_db_query("delete FROM " . TABLE_WHOS_ONLINE . " WHERE customer_id = '" . $cID . "'");
 
     print_xml_status (0, $_POST['action'], 'OK', '', 'SQL_RES1', $res1);
   }
@@ -2241,7 +2238,7 @@ function CustomersErase ()
   $table_has_products_image_medium = true;
   $table_has_products_image_large = false;
 
-  $images_query = xtc_db_query(' SHOW COLUMNS FROM '.TABLE_PRODUCTS);
+  $images_query = xtc_db_query(' SHOW COLUMNS FROM '. $oosDBTable['products']);
   while($column = xtc_db_fetch_array($images_query)) {
         if ($column['Field'] == 'products_image_medium') {
           $table_has_products_image_medium = true;
@@ -2283,6 +2280,9 @@ while (list($key, $value) = each($_GET))
    $gdata .= addslashes($key)." => ".addslashes($value)."\\r\\n";
 }
 
+    $db =& oosDBGetConn();
+    $oosDBTable = oosDBGetTables();
+
 xtc_db_query("INSERT INTO cao_log
               (date,user,pw,method,action,post_data,get_data) VALUES
               (NOW(),'".$user."','".$password."','".$REQUEST_METHOD."','".$_POST['action']."','".$pdata."','".$gdata."')");
@@ -2314,7 +2314,7 @@ xtc_db_query("INSERT INTO cao_log
         }
       }
     }
-  //----------------------------------------------------------------------------		
+
     function parse() {
       global $messageStack;
       if (isset($_FILES[$this->file])) {
@@ -2362,7 +2362,7 @@ xtc_db_query("INSERT INTO cao_log
       if (substr($this->destination, -1) != '/') $this->destination .= '/';
 
       // GDlib check
-      if (!function_exists(imagecreatefromgif)) {
+      if (!function_exists(imagecreateFROMgif)) {
 
         // check if uploaded file = gif
         if ($this->destination==DIR_FS_CATALOG_ORIGINAL_IMAGES) {
