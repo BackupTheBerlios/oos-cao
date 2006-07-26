@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_oos.php,v 1.3 2006/07/26 06:16:43 r23 Exp $
+   $Id: cao_oos.php,v 1.4 2006/07/26 11:35:15 r23 Exp $
 
    Based on:
 
@@ -189,11 +189,6 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
 
   // security  1.check if admin user with this mailadress exits, and got access to xml-export
   //           2.check if pasword = true
-  if (column_exists ('admin_access','xml_export')==false)
-  {
-     xtc_db_query('ALTER TABLE admin_access ADD xml_export INT(1)  DEFAULT "0";');
-     xtc_db_query('UPDATE admin_access SET xml_export= 1 WHERE customers_id=\'1\';');
-  }
 
   $check_customer_query=xtc_db_query("select customers_id,
                                       customers_status,
