@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_functions.php,v 1.3 2006/07/26 06:16:44 r23 Exp $
+   $Id: cao_functions.php,v 1.4 2006/07/26 06:23:06 r23 Exp $
 
    Based on:
 
@@ -130,7 +130,7 @@ function print_xml_status ($code, $action, $msg, $mode, $item, $value)
   return;
 }
 
-//--------------------------------------------------------------
+
 
 function table_exists($table_name) 
 {
@@ -143,7 +143,6 @@ function table_exists($table_name)
   }
 }
 
-//--------------------------------------------------------------
 
 function column_exists($table, $column) 
 {
@@ -156,7 +155,6 @@ function column_exists($table, $column)
   }
 }
 
-//--------------------------------------------------------------
 
 function SendCategories ()
 {
@@ -215,7 +213,6 @@ function SendCategories ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
 
 function  SendManufacturers ()
 {
@@ -269,7 +266,7 @@ function  SendManufacturers ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
+
 
 function SendOrders ()
 {
@@ -474,7 +471,7 @@ function SendOrders ()
              orders_status_id = '" . $orders['orders_status'] . "' ";
 
     $comments_query = xtc_db_query($sql);
-    if ($comments =  xtc_db_fetch_array($comments_query)) 
+    if ($comments =  xtc_db_fetch_array($comments_query))
     {
       $schema .=  '<ORDER_COMMENTS>' . htmlspecialchars($comments['comments']) . '</ORDER_COMMENTS>' . "\n";
     }
@@ -485,7 +482,7 @@ function SendOrders ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
+
 
 function SendProducts ()
 {
@@ -764,7 +761,7 @@ function SendProducts ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
+
 
 function SendCustomers ()
 {
@@ -842,7 +839,7 @@ function SendCustomers ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
+
 
 function SendCustomersNewsletter ()
 {
@@ -881,7 +878,7 @@ function SendCustomersNewsletter ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
+
 
 function SendShopConfig ()
 {
@@ -955,8 +952,8 @@ function SendShopConfig ()
   echo $schema;
 }
 
-//--------------------------------------------------------------
- 
+
+
 function SendXMLHeader ()
 {
   header ("Last-Modified: ". gmdate ("D, d M Y H:i:s"). " GMT");  // immer ge�dert
@@ -964,7 +961,7 @@ function SendXMLHeader ()
   header ("Pragma: no-cache"); // HTTP/1.0
   header ("Content-type: text/xml");
 }
-//--------------------------------------------------------------
+
 
 
 function SendHTMLHeader ()
@@ -975,7 +972,7 @@ function SendHTMLHeader ()
   header ("Content-type: text/html");
 }
 
-//--------------------------------------------------------------
+
 
 function ShowHTMLMenu ()
 {
@@ -1009,7 +1006,7 @@ function ShowHTMLMenu ()
 <?php
 }
 
-//--------------------------------------------------------------   
+
 
 function UpdateTables ()
 {
@@ -1076,7 +1073,7 @@ function UpdateTables ()
   echo '</body></html>';
 }
 
-//--------------------------------------------------------------
+
 
 function xtc_try_upload ($file = '', $destination = '', 
                          $permissions = '777', $extensions = '')
@@ -1085,7 +1082,6 @@ function xtc_try_upload ($file = '', $destination = '',
   if ($file_object->filename != '') return $file_object; else return false;
 }
 
-//--------------------------------------------------------------
 
 require_once(DIR_FS_INC .'xtc_not_null.inc.php');
 
@@ -1096,9 +1092,8 @@ function clear_string($value)
         $string=str_replace('(','',$string);
         $array=explode(',',$string);
         return $array;
-} 
+}
 
-//--------------------------------------------------------------
 
 function xtc_RandomString($length) 
 {
@@ -1116,14 +1111,12 @@ function xtc_RandomString($length)
   return $rand_str;
 }
 
-//--------------------------------------------------------------
 
 function xtc_create_password($pass) 
 {
   return md5($pass);
 }
 
-//--------------------------------------------------------------
 
 function xtc_remove_product($product_id) 
 {
@@ -1178,7 +1171,6 @@ function xtc_remove_product($product_id)
           xtc_db_query("delete from " . TABLE_REVIEWS . " where products_id = '" . xtc_db_input($product_id) . "'");
 }
 
-//--------------------------------------------------------------
 
 function ManufacturersImageUpload ()
 {
@@ -1195,7 +1187,6 @@ function ManufacturersImageUpload ()
   print_xml_status ($code, $_POST['action'], $message, '', 'FILE_NAME', $manufacturers_image->filename);
 }
 
-//--------------------------------------------------------------
 
 function CategoriesImageUpload ()
 {
@@ -1207,11 +1198,10 @@ function CategoriesImageUpload ()
   } else {
     $code = -1;
     $message = 'UPLOAD FAILED';
-  } 
+  }
   print_xml_status ($code, $_POST['action'], $message, '', 'FILE_NAME', $categories_image->filename);
 }
 
-//--------------------------------------------------------------
 
 function ProductsImageUpload ()
 {
@@ -1240,7 +1230,7 @@ function ProductsImageUpload ()
   print_xml_status ($code, $_POST['action'], $message, '', 'FILE_NAME', $products_image->filename);
 }
 
-//--------------------------------------------------------------
+
 
 function ManufacturersUpdate ()
 {
@@ -1346,7 +1336,7 @@ elseif ($exists==1) // Update
   }
 }
 
-//--------------------------------------------------------------
+
 
 function ManufacturersErase ()
 {
@@ -1370,7 +1360,7 @@ function ManufacturersErase ()
   }
 }
 
-//--------------------------------------------------------------
+
 
 function ProductsUpdate ()
 {
@@ -1614,8 +1604,8 @@ function ProductsUpdate ()
   print_xml_status (0, $_POST['action'], 'OK', $mode, 'PRODUCTS_ID', $products_id);
 }
 
-//--------------------------------------------------------------
- 
+
+
 function ProductsErase ()
 {
   global $_POST;
@@ -1634,12 +1624,12 @@ function ProductsErase ()
     else
   {
     $code = 99;
-    $message = 'FAILED';			   
+    $message = 'FAILED';
   }
   print_xml_status (0, $_POST['action'], 'OK', '', 'SQL_RES1', $res1);
 }
 
-//--------------------------------------------------------------
+
 
 function ProductsSpecialPriceUpdate ()
 {
@@ -1692,7 +1682,7 @@ function ProductsSpecialPriceUpdate ()
   }
 }
 
-//--------------------------------------------------------------
+
 
 function ProductsSpecialPriceErase ()
 {
@@ -1710,7 +1700,7 @@ function ProductsSpecialPriceErase ()
   }
 }
 
-//--------------------------------------------------------------
+
 
 function CategoriesUpdate ()
 {
@@ -1876,7 +1866,7 @@ if ($exists==0) // Insert
   }
 }
 
-//--------------------------------------------------------------
+
 
 function CategoriesErase ()
 {
@@ -1901,7 +1891,6 @@ function CategoriesErase ()
   }
 }
 
-//--------------------------------------------------------------
 
 function Prod2CatUpdate ()
 {
@@ -1921,7 +1910,6 @@ function Prod2CatUpdate ()
   }
 }
 
-//--------------------------------------------------------------
 
 function Prod2CatErase ()
 {
@@ -1941,7 +1929,6 @@ function Prod2CatErase ()
   }
 }
 
-//--------------------------------------------------------------
 
 function OrderUpdate ()
 {
@@ -2098,7 +2085,6 @@ function OrderUpdate ()
   echo $schema; 
 }
 
-//--------------------------------------------------------------
 
 function CustomersUpdate ()
 {
@@ -2230,7 +2216,6 @@ function CustomersUpdate ()
   print_xml_status (0, $_POST['action'], 'OK', $mode, 'CUSTOMERS_ID', $customers_id);
 }
 
-//--------------------------------------------------------------
 
 function CustomersErase ()
 {
@@ -2263,9 +2248,7 @@ function CustomersErase ()
   }
 }
 
-//--------------------------------------------------------------
-//                     Ende Funktionen
-//-------------------------------------------------------------- 
+
 
 
 
@@ -2323,15 +2306,11 @@ xtc_db_query("INSERT INTO cao_log
 
 
 
-//-------------------------------------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------------------------------------
 
   require_once(DIR_FS_INC . 'xtc_not_null.inc.php');
   require_once(DIR_FS_INC . 'xtc_redirect.inc.php');
   require_once(DIR_FS_INC . 'xtc_rand.inc.php');
 
-  //----------------------------------------------------------------------------
   class upload {
     var $file, $filename, $destination, $permissions, $extensions, $tmp_filename;
 
@@ -2391,7 +2370,7 @@ xtc_db_query("INSERT INTO cao_log
         return false;
       }
     }
-  //----------------------------------------------------------------------------
+
     function save() {
       global $messageStack;
 
@@ -2433,27 +2412,27 @@ xtc_db_query("INSERT INTO cao_log
         return false;
       }
     }
-  //----------------------------------------------------------------------------
+
     function set_file($file) {
       $this->file = $file;
     }
-  //----------------------------------------------------------------------------
+
     function set_destination($destination) {
       $this->destination = $destination;
     }
-  //----------------------------------------------------------------------------
+
     function set_permissions($permissions) {
       $this->permissions = octdec($permissions);
     }
-  //----------------------------------------------------------------------------
+
     function set_filename($filename) {
       $this->filename = $filename;
     }
-  //----------------------------------------------------------------------------
+
     function set_tmp_filename($filename) {
       $this->tmp_filename = $filename;
     }
-  //----------------------------------------------------------------------------
+
     function set_extensions($extensions) {
       if (xtc_not_null($extensions)) {
         if (is_array($extensions)) {
@@ -2465,7 +2444,7 @@ xtc_db_query("INSERT INTO cao_log
         $this->extensions = array();
       }
     }
-  //----------------------------------------------------------------------------
+
     function check_destination() {
       global $messageStack;
 
