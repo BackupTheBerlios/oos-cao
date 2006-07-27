@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_oos.php,v 1.4 2006/07/26 11:35:15 r23 Exp $
+   $Id: cao_oos.php,v 1.5 2006/07/27 01:54:45 r23 Exp $
 
    Based on:
 
@@ -107,8 +107,7 @@
 *******************************************************************************************/
 
 
-define('SET_TIME_LIMIT',1);   // use set_time_limit(0);
-define('CHARSET','iso-8859-1');
+define('CHARSET','iso-8859-15');
 
 $version_nr    = '1.50';
 $version_datum = '2005.11.02';
@@ -122,8 +121,8 @@ define ('LOGGER',false); // Um das Loggen einzuschalten false durch true ersetze
 define('SEND_ACCOUNT_MAIL',false);
 
 // Default-Sprache
-$LangID = 2;
-$Lang_folder = 'german';
+$LangID = 1;
+$Lang_folder = 'deu';
 
 // Steuer Einstellungen fr CAO-Faktura
 
@@ -143,7 +142,7 @@ $order_total_class['ot_shipping']['prefix'] = '+';
 $order_total_class['ot_shipping']['tax'] = '16';
 
 
-define ('_VALID_XTC',false);
+  define('OOS_VALID_MOD', 'yes');
 
 require('../includes/application_top_export.php');
 
@@ -167,24 +166,21 @@ if ((isset($_POST['user']))and(isset($_POST['password'])))
 }
   else
 {
-   $user=$_GET['user'];
-   $password=$_GET['password'];
+   $user = $_GET['user'];
+   $password = $_GET['password'];
 }
 
-if ($user=='' or $password=='')
-{
+if ($user=='' or $password=='') {
 ?>
 <html><head><title></title></head><body>
 <h3>CAO-Faktura - xt:Commerce Shopanbindung</h3>
 <br><br>
-Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMIN-EMAIL</font>&password=<font color="red">ADMIN-PASSWORD-IM-KLARTEXT</font>
+Aufruf des Scriptes mit <br><b><?php echo $_SERVER['PHP_SELF']; ?>?user=<font color="red">ADMIN-EMAIL</font>&password=<font color="red">ADMIN-PASSWORD-IM-KLARTEXT</font>
 </b>
 </body></html>
-<?
+<?php
   exit;
-}
-  else
-{
+} else {
   require ('cao_xtc_functions.php');
 
   // security  1.check if admin user with this mailadress exits, and got access to xml-export
@@ -239,10 +235,8 @@ Aufruf des Scriptes mit <br><b><? echo $PHP_SELF; ?>?user=<font color="red">ADMI
 }
 
 
-if ($_SERVER['REQUEST_METHOD']=='GET')
-{
-  switch ($_GET['action'])
-  {
+if ($_SERVER['REQUEST_METHOD']=='GET') {
+  switch ($_GET['action']) {
      case 'version':        // Ausgabe Scriptversion
 
        SendXMLHeader ();
@@ -302,13 +296,9 @@ if ($_SERVER['REQUEST_METHOD']=='GET')
        exit;
 
    }
-}
- else
-{
-  if ($_SERVER['REQUEST_METHOD']=='POST')
-  {
-    switch ($_POST['action'])
-    {
+} else {
+  if ($_SERVER['REQUEST_METHOD']=='POST')  {
+    switch ($_POST['action']) {
       case 'manufacturers_image_upload':
 
         SendXMLHeader ();

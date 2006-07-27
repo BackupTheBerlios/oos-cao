@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_api.php,v 1.2 2005/06/02 00:24:01 r23 Exp $
+   $Id: cao_api.php,v 1.3 2006/07/27 01:54:45 r23 Exp $
    ----------------------------------------------------------------------
    Based on:
    
@@ -36,30 +36,23 @@
 
   require(OOS_INCLUDES . 'oos_filename.php');
   require(OOS_INCLUDES . 'oos_tables.php');
-  
+
   require(OOS_FUNCTIONS . 'function_kernel.php');
 
 // Load server utilities  
   require(OOS_FUNCTIONS . 'function_server.php');
-  
-  
-  if (isset($_POST)) {
-    foreach ($_POST as $key=>$value) {
-      $$key = oosPrepareInput($value);
-    }
-  }
-   
+
   // include the database functions
   require(OOS_ADODB . 'toexport.inc.php');
   require(OOS_ADODB . 'adodb-errorhandler.inc.php');
   require(OOS_ADODB . 'adodb.inc.php');
   require(OOS_FUNCTIONS . 'function_db.php');
-  
+
   // make a connection to the database... now
   if (!oosDBInit()) {
     die('Unable to connect to database server!');
   }
-  
+
   $db =& oosDBGetConn();
 
 // set application wide parameters
@@ -70,8 +63,8 @@
     define($configuration['cfgKey'], $configuration['cfgValue']);
     $configuration_result->MoveNext();
   }
-  
- if (!isset($PHP_SELF)) $PHP_SELF = $_SERVER['PHP_SELF'];
+
+
 
 // define our general functions used application-wide
   require(OOS_FUNCTIONS . 'function_output.php');
