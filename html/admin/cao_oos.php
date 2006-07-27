@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_oos.php,v 1.5 2006/07/27 01:54:45 r23 Exp $
+   $Id: cao_oos.php,v 1.6 2006/07/27 03:14:17 r23 Exp $
 
    Based on:
 
@@ -161,8 +161,8 @@ if (file_exists(DIR_FS_DOCUMENT_ROOT.'admin/includes/classes/image_manipulator.p
 
 if ((isset($_POST['user']))and(isset($_POST['password']))) 
 {
-   $user=$_POST['user'];
-   $password=$_POST['password'];
+   $user = $_POST['user'];
+   $password = $_POST['password'];
 }
   else
 {
