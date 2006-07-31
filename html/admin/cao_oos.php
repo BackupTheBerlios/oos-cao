@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_oos.php,v 1.6 2006/07/27 03:14:17 r23 Exp $
+   $Id: cao_oos.php,v 1.7 2006/07/31 09:14:37 r23 Exp $
 
    Based on:
 
@@ -107,70 +107,57 @@
 *******************************************************************************************/
 
 
-define('CHARSET','iso-8859-15');
+  define('CHARSET','iso-8859-15');
 
-$version_nr    = '1.50';
-$version_datum = '2005.11.02';
+  $version_nr    = '1.50';
+  $version_datum = '2005.11.02';
 
-// falls die MWST vom shop vertauscht wird, hier true setzen.
-define('SWITCH_MWST',false);
+  // falls die MWST vom shop vertauscht wird, hier true setzen.
+  define('SWITCH_MWST', false);
 
-define ('LOGGER',false); // Um das Loggen einzuschalten false durch true ersetzen.
+  define ('LOGGER', false); // Um das Loggen einzuschalten false durch true ersetzen.
 
-// Emails beim Kundenanlegen versenden ?
-define('SEND_ACCOUNT_MAIL',false);
+  // Emails beim Kundenanlegen versenden ?
+  define('SEND_ACCOUNT_MAIL',false);
 
-// Default-Sprache
-$LangID = 1;
-$Lang_folder = 'deu';
+  // Default-Sprache
+  $LangID = 1;
+  $Lang_folder = 'deu';
 
-// Steuer Einstellungen fr CAO-Faktura
+  // Steuer Einstellungen fr CAO-Faktura
+  $order_total_class['ot_cod_fee']['prefix'] = '+';
+  $order_total_class['ot_cod_fee']['tax'] = '16';
 
-$order_total_class['ot_cod_fee']['prefix'] = '+';
-$order_total_class['ot_cod_fee']['tax'] = '16';
+  $order_total_class['ot_customer_discount']['prefix'] = '-';
+  $order_total_class['ot_customer_discount']['tax'] = '16';
 
-$order_total_class['ot_customer_discount']['prefix'] = '-';
-$order_total_class['ot_customer_discount']['tax'] = '16';
+  $order_total_class['ot_gv']['prefix'] = '-';
+  $order_total_class['ot_gv']['tax'] = '0';
 
-$order_total_class['ot_gv']['prefix'] = '-';
-$order_total_class['ot_gv']['tax'] = '0';
+  $order_total_class['ot_loworderfee']['prefix'] = '+';
+  $order_total_class['ot_loworderfee']['tax'] = '16';
 
-$order_total_class['ot_loworderfee']['prefix'] = '+';
-$order_total_class['ot_loworderfee']['tax'] = '16';
-
-$order_total_class['ot_shipping']['prefix'] = '+';
-$order_total_class['ot_shipping']['tax'] = '16';
+  $order_total_class['ot_shipping']['prefix'] = '+';
+  $order_total_class['ot_shipping']['tax'] = '16';
 
 
   define('OOS_VALID_MOD', 'yes');
 
-require('../includes/application_top_export.php');
+  require '../includes/application_top_export.php';
 
-// Kundengruppen ID fr Neukunden (default "neue Kunden einstellungen in XTC")
-define('STANDARD_GROUP',DEFAULT_CUSTOMERS_STATUS_ID);
+  // Kundengruppen ID fr Neukunden (default "neue Kunden einstellungen in XTC")
+  define('STANDARD_GROUP',DEFAULT_CUSTOMERS_STATUS_ID);
 
-//KL02062005
-if (file_exists(DIR_FS_DOCUMENT_ROOT.'admin/includes/classes/image_manipulator.php'))
-{
-  // fr XTC 2.x
-  include(DIR_FS_DOCUMENT_ROOT.'admin/includes/classes/image_manipulator.php');
-} else {
-  // fr XTC ab 3.x
-  include(DIR_FS_DOCUMENT_ROOT.'admin/includes/classes/'.IMAGE_MANIPULATOR);
-} //KL02062005_ENDE
 
-if ((isset($_POST['user']))and(isset($_POST['password']))) 
-{
-   $user = $_POST['user'];
-   $password = $_POST['password'];
-}
-  else
-{
-   $user = $_GET['user'];
-   $password = $_GET['password'];
-}
+  if ((isset($_POST['user'])) and (isset($_POST['password']))) {
+    $user = $_POST['user'];
+    $password = $_POST['password'];
+  } else {
+    $user = $_GET['user'];
+    $password = $_GET['password'];
+  }
 
-if ($user=='' or $password=='') {
+  if ($user == '' or $password == '') {
 ?>
 <html><head><title></title></head><body>
 <h3>CAO-Faktura - xt:Commerce Shopanbindung</h3>
@@ -179,41 +166,39 @@ Aufruf des Scriptes mit <br><b><?php echo $_SERVER['PHP_SELF']; ?>?user=<font co
 </b>
 </body></html>
 <?php
-  exit;
-} else {
-  require ('cao_xtc_functions.php');
-
-  // security  1.check if admin user with this mailadress exits, and got access to xml-export
-  //           2.check if pasword = true
-
-  $check_customer_query=xtc_db_query("select customers_id,
-                                      customers_status,
-                                      customers_password
-                                      from " . TABLE_CUSTOMERS . " where
-                                      customers_email_address = '" . $user . "'");
-
-  if (!xtc_db_num_rows($check_customer_query))
-  {
-    SendXMLHeader ();
-    print_xml_status (105, $_POST['action'], 'WRONG LOGIN', '', '', '');
     exit;
-  }
-    else
-  {
-    $check_customer = xtc_db_fetch_array($check_customer_query);
-    // check if customer is Admin
-    if ($check_customer['customers_status']!='0') 
-    {
-      SendXMLHeader ();
-      print_xml_status (106, $_POST['action'], 'WRONG LOGIN', '', '', '');
-      exit;
-    }
+  } else {
+    require 'cao_xtc_functions.php';
+
+    // security  1.check if admin user with this mailadress exits, and got access to xml-export
+    //           2.check if pasword = true
+
+
+    $query = "SELECT admin_id, admin_groups_id, admin_firstname, admin_email_address, admin_password
+              FROM " . $oosDBTable['admin'] . "
+              WHERE admin_email_address = '" . oosDBInput($user) . "'";
+
+   $check_admin_result = $db->Execute($query);
+   if (!$check_admin_result->RecordCount()) {
+     SendXMLHeader ();
+     print_xml_status (105, $_POST['action'], 'WRONG LOGIN', '', '', '');
+     exit;
+
+   } else {
+     $check_admin = $check_admin_result->fields;
+     // Check that password is good
+     if (!oos_validate_password($password, $check_admin['login_password'])) {
+       SendXMLHeader ();
+       print_xml_status (108, $_POST['action'], 'WRONG PASSWORD', '', '', '');
+       exit;
+
+     }
 
     // check if Admin is allowed to access xml_export
     $access_query=xtc_db_query("SELECT
                                 xml_export
                                 from admin_access
-                                WHERE customers_id='".$check_customer['customers_id']."'");
+                                WHERE customers_id='".$check_admin['customers_id']."'");
     $access_data = xtc_db_fetch_array($access_query);
     if ($access_data['xml_export']!=1) 
     {
@@ -222,9 +207,9 @@ Aufruf des Scriptes mit <br><b><?php echo $_SERVER['PHP_SELF']; ?>?user=<font co
       exit;
     }
 
-    if (!( ($check_customer['customers_password'] == $password) or
-             ($check_customer['customers_password'] == md5($password)) or
-             ($check_customer['customers_password'] == md5(substr($password,2,40)))
+    if (!( ($check_admin['customers_password'] == $password) or
+             ($check_admin['customers_password'] == md5($password)) or
+             ($check_admin['customers_password'] == md5(substr($password,2,40)))
        ))
     {
       SendXMLHeader ();
