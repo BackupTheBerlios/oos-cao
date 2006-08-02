@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_functions.php,v 1.10 2006/07/30 16:29:11 r23 Exp $
+   $Id: cao_functions.php,v 1.11 2006/08/02 13:47:47 r23 Exp $
 
    Based on:
 
@@ -296,7 +296,7 @@
                  '<ORDER_CURRENCY_VALUE>' . $orders['currency_value'] . '</ORDER_CURRENCY_VALUE>' . "\n" .
                  '</ORDER_HEADER>' . "\n" .
                  '<BILLING_ADDRESS>' . "\n" .
-                 '<VAT_ID>' . htmlspecialchars($orders['customers_vat_id']) . '</VAT_ID>' . "\n" . //JP07112005 (Existiert erst ab XTC 3.x)
+                 '<VAT_ID></VAT_ID>' . "\n" . // Existiert noch nicht)
                  '<COMPANY>' . htmlspecialchars($orders['billing_company']) . '</COMPANY>' . "\n" .
                  '<NAME>' . htmlspecialchars($orders['billing_name']) . '</NAME>' . "\n" .
                  '<FIRSTNAME>' . htmlspecialchars($orders['billing_firstname']) . '</FIRSTNAME>' . "\n" .
@@ -463,9 +463,11 @@
     $db =& oosDBGetConn();
     $oosDBTable = oosDBGetTables();
 
-    $sql = "SELECT products_id,products_fsk18, products_quantity, products_model, products_image, products_price, " .
-           "products_date_added, products_last_modified, products_date_available, products_weight, " .
-           "products_status, products_tax_class_id, manufacturers_id, products_ordered FROM " .  $oosDBTable['products'];
+    $sql = "SELECT products_id,products_fsk18, products_quantity, products_model, products_image, products_price,
+                   products_date_added, products_last_modified, products_date_available, products_weight,
+                   products_status, products_tax_class_id, manufacturers_id, products_ordered
+            FROM " .  $oosDBTable['products'];
+
     $from = oosDBPrepareInput($_GET['products_from']);
     $anz  = oosDBPrepareInput($_GET['products_count']);
 
@@ -480,17 +482,17 @@
       $schema  = '<PRODUCT_INFO>' . "\n" .
                  '<PRODUCT_DATA>' . "\n" .
                  '<PRODUCT_ID>'.$products['products_id'].'</PRODUCT_ID>' . "\n" .
-                 '<PRODUCT_DEEPLINK>'. HTTP_SERVER.DIR_WS_CATALOG.$xtc_filename['product_info'].'?products_id='.$products['products_id'].'</PRODUCT_DEEPLINK>' . "\n" .
+                 '<PRODUCT_DEEPLINK>'. OOS_HTTP_SERVER . OOS_SHOP . $xtc_filename['product_info'].'?products_id='.$products['products_id'].'</PRODUCT_DEEPLINK>' . "\n" .
                  '<PRODUCT_QUANTITY>' . $products['products_quantity'] . '</PRODUCT_QUANTITY>' . "\n" .
                  '<PRODUCT_MODEL>' . htmlspecialchars($products['products_model']) . '</PRODUCT_MODEL>' . "\n" .
-                 '<PRODUCT_FSK18>' . htmlspecialchars($products['products_fsk18']) . '</PRODUCT_FSK18>' . "\n" .
+                 '<PRODUCT_FSK18></PRODUCT_FSK18>' . "\n" .
                  '<PRODUCT_IMAGE>' . htmlspecialchars($products['products_image']) . '</PRODUCT_IMAGE>' . "\n";
 
       if ($products['products_image']!='') {
-        $schema .= '<PRODUCT_IMAGE_POPUP>'.HTTP_SERVER.DIR_WS_CATALOG.DIR_WS_POPUP_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_POPUP>'. "\n" .
-                   '<PRODUCT_IMAGE_SMALL>'.HTTP_SERVER.DIR_WS_CATALOG.DIR_WS_INFO_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_SMALL>'. "\n" .
-                   '<PRODUCT_IMAGE_THUMBNAIL>'.HTTP_SERVER.DIR_WS_CATALOG.DIR_WS_THUMBNAIL_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_THUMBNAIL>'. "\n" .
-                   '<PRODUCT_IMAGE_ORIGINAL>'.HTTP_SERVER.DIR_WS_CATALOG.DIR_WS_ORIGINAL_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_ORIGINAL>'. "\n";
+        $schema .= '<PRODUCT_IMAGE_POPUP>' . OOS_HTTP_SERVER . OOS_SHOP . DIR_WS_POPUP_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_POPUP>'. "\n" .
+                   '<PRODUCT_IMAGE_SMALL>' . OOS_HTTP_SERVER . OOS_SHOP . DIR_WS_INFO_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_SMALL>'. "\n" .
+                   '<PRODUCT_IMAGE_THUMBNAIL>' . OOS_HTTP_SERVER . OOS_SHOP . DIR_WS_THUMBNAIL_IMAGES.$products['products_image'].'</PRODUCT_IMAGE_THUMBNAIL>'. "\n" .
+                   '<PRODUCT_IMAGE_ORIGINAL></PRODUCT_IMAGE_ORIGINAL>'. "\n";
       }
 
       $schema .= '<PRODUCT_PRICE>' . $products['products_price'] . '</PRODUCT_PRICE>' . "\n";
@@ -520,20 +522,14 @@
                  '<PRODUCTS_ORDERED>' . $products['products_ordered'] . '</PRODUCTS_ORDERED>' . "\n" ;
 
 
-      $detail_query = $db->Execute("SELECT
-                                   products_id,
-                                   language_id,
-                                   products_name, " .  $oosDBTable['products_description'] .
-                                   ".products_description,
-                                   products_short_description,
-                                   products_meta_title,
-                                   products_meta_description,
-                                   products_meta_keywords,
-                                   products_url,
-                                   name as language_name, code as language_code " .
-                                   "FROM " .  $oosDBTable['products_description'] . ", " . $oosDBTable['languages'] . " " .
-                                   "WHERE " .  $oosDBTable['products_description'] . ".language_id=" . $oosDBTable['languages'] . ".languages_id " .
-                                   "and " .  $oosDBTable['products_description'] . ".products_id=" . $products['products_id']);
+      $detail_query = "SELECT  pd.products_id, language_id,  products_name, pd.products_description,
+                               pd.products_meta_title, pd.products_meta_description,
+                               pd.products_meta_keywords, pd.products_url, 
+                               l.name as language_name, l.code as language_code
+                          FROM " . $oosDBTable['products_description'] . " pd,
+                               " . $oosDBTable['languages'] . " l
+                          WHERE pd.language_id = l.languages_id
+                            AND pdproducts_id = " . $products['products_id'];
 
     $result = $db->Execute($query);
 
@@ -548,7 +544,7 @@
         $prod_details = $details["products_description"];
         if ($prod_details != 'Array') {
           $schema .=  "<DESCRIPTION>" . htmlspecialchars($details["products_description"]) . "</DESCRIPTION>" . "\n";
-          $schema .=  "<SHORT_DESCRIPTION>" . htmlspecialchars($details["products_short_description"]) . "</SHORT_DESCRIPTION>" . "\n";
+          $schema .=  "<SHORT_DESCRIPTION></SHORT_DESCRIPTION>" . "\n";
           $schema .=  "<META_TITLE>" . htmlspecialchars($details["products_meta_title"]) . "</META_TITLE>" . "\n";
           $schema .=  "<META_DESCRIPTION>" . htmlspecialchars($details["products_meta_description"]) . "</META_DESCRIPTION>" . "\n";
           $schema .=  "<META_KEYWORDS>" . htmlspecialchars($details["products_meta_keywords"]) . "</META_KEYWORDS>" . "\n";
@@ -559,8 +555,10 @@
       }
 
        // NEU JP 26.08.2005 Aktionspreise exportieren
-      $special_query = "SELECT * FROM " . $oosDBTable['specials'] . " " .
-                         "WHERE products_id=" . $products['products_id'] . " limit 0,1";
+      $special_query = "SELECT specials_id, products_id, specials_new_products_price, specials_date_added,
+                               specials_last_modified, expires_date, date_status_change, status
+                        FROM " . $oosDBTable['specials'] . "
+                        WHERE products_id=" . $products['products_id'] . " limit 0,1";
 
       $special_result = $db->Execute($special_query);
 
@@ -603,35 +601,18 @@
     $db =& oosDBGetConn();
     $oosDBTable = oosDBGetTables();
 
-    $address_query = "SELECT
-                    c.customers_gender, 
-                    c.customers_id,
-                    c.customers_cid, 
-                    c.customers_dob, 
-                    c.customers_email_address, 
-                    c.customers_telephone, 
-                    c.customers_fax,
-                    ci.customers_info_date_account_created,
-                    a.entry_firstname, 
-                    a.entry_lastname, 
-                    a.entry_company, 
-                    a.entry_street_address, 
-                    a.entry_city,
-                    a.entry_postcode, 
-                    a.entry_suburb,
-                    a.entry_state,
-                    co.countries_iso_code_2
-                   FROM 
-                    " . $oosDBTable['customers'] . " c,
-                    " . $oosDBTable['customers_info'] . " ci,
-                    " . $oosDBTable['address_book'] . " a ,
-                    " . $oosDBTable['countries'] . " co
-                   WHERE
-                    c.customers_id = ci.customers_info_id AND
-                    c.customers_id = a.customers_id AND
-                    c.customers_default_address_id = a.address_book_id AND
-                    a.entry_country_id  = co.countries_id";
-
+    $address_query = "SELECT c.customers_gender, c.customers_id, c.customers_cid, c.customers_dob, c.customers_email_address, 
+                             c.customers_telephone, c.customers_fax, ci.customers_info_date_account_created,
+                             a.entry_firstname, a.entry_lastname, a.entry_company, a.entry_street_address,
+                             a.entry_city, a.entry_postcode, a.entry_suburb, a.entry_state, co.countries_iso_code_2
+                      FROM " . $oosDBTable['customers'] . " c,
+                           " . $oosDBTable['customers_info'] . " ci,
+                           " . $oosDBTable['address_book'] . " a ,
+                           " . $oosDBTable['countries'] . " co
+                      WHERE c.customers_id = ci.customers_info_id AND
+                            c.customers_id = a.customers_id AND
+                            c.customers_default_address_id = a.address_book_id AND
+                            a.entry_country_id  = co.countries_id";
     if (isset($from)) {
       if (!isset($anz)) $anz = 1000;
       $address_query.= " limit " . $from . "," . $anz;
@@ -685,7 +666,9 @@
     $db =& oosDBGetConn();
     $oosDBTable = oosDBGetTables();
 
-    $address_query = "SELECT *
+    $address_query = "SELECT customers_id, customers_gender, customers_firstname, customers_lastname,
+                             customers_number, customers_dob, customers_email_address, customers_newsletter, 
+                             customers_status, customers_login, customers_language, customers_max_order
                       FROM " . $oosDBTable['customers']. " 
                       WHERE customers_newsletter = 1";
 
@@ -1767,7 +1750,7 @@
             $smarty->compile_dir=DIR_FS_CATALOG.'templates_c';
             $smarty->config_dir=DIR_FS_CATALOG.'lang';
             $smarty->assign('tpl_path','templates/'.CURRENT_TEMPLATE.'/');
-            $smarty->assign('logo_path',HTTP_SERVER  . DIR_WS_CATALOG.'templates/'.CURRENT_TEMPLATE.'/img/');
+            $smarty->assign('logo_path',HTTP_SERVER  . OOS_SHOP . 'templates/'.CURRENT_TEMPLATE.'/img/');
             $smarty->assign('NAME',$check_status['customers_name']);
             $smarty->assign('ORDER_NR',$oID);
             $smarty->assign('ORDER_LINK',xtc_href_link(FILENAME_CATALOG_ACCOUNT_HISTORY_INFO, 'order_id=' . $oID, 'SSL'));
@@ -1938,7 +1921,7 @@
       $smarty->compile_dir=DIR_FS_CATALOG.'templates_c';
       $smarty->config_dir=DIR_FS_CATALOG.'lang';
       $smarty->assign('tpl_path','templates/'.CURRENT_TEMPLATE.'/');
-      $smarty->assign('logo_path',HTTP_SERVER  . DIR_WS_CATALOG.'templates/'.CURRENT_TEMPLATE.'/img/');
+      $smarty->assign('logo_path',HTTP_SERVER  . OOS_SHOP . 'templates/'.CURRENT_TEMPLATE.'/img/');
       $smarty->assign('NAME',$sql_customers_data_array['customers_lastname'] . ' ' . $sql_customers_data_array['customers_firstname']);
       $smarty->assign('EMAIL',$sql_customers_data_array['customers_email_address']);
       $smarty->assign('PASSWORD',$pw);
