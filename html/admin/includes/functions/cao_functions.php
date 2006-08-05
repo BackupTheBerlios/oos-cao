@@ -1,6 +1,6 @@
 <?php
 /* ----------------------------------------------------------------------
-   $Id: cao_functions.php,v 1.11 2006/08/02 13:47:47 r23 Exp $
+   $Id: cao_functions.php,v 1.12 2006/08/05 10:00:37 r23 Exp $
 
    Based on:
 
@@ -1073,14 +1073,14 @@
         $insert_sql_data = array('date_added' => 'now()');
         $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
 
-        xtc_db_perform($oosDBTable['manufacturers'], $sql_data_array);
+        oosDBPerform($oosDBTable['manufacturers'], $sql_data_array);
         $products_id = mysql_insert_id();
       } elseif ($exists==1) {
         $mode='UPDATE';
         $update_sql_data = array('last_modified' => 'now()');
         $sql_data_array = array_merge($sql_data_array, $update_sql_data);
 
-        xtc_db_perform($oosDBTable['manufacturers'], $sql_data_array, 'update', 'manufacturers_id = \'' . oosDBInput($manufacturers_id) . '\'');
+        oosDBPerform($oosDBTable['manufacturers'], $sql_data_array, 'update', 'manufacturers_id = \'' . oosDBInput($manufacturers_id) . '\'');
       }
       $languages_query = $db->Execute("SELECT languages_id, name, code, image, directory FROM " . $oosDBTable['languages'] . " ORDER BY sort_order");
       while ($languages = xtc_db_fetch_array($languages_query->fields) {
@@ -1118,9 +1118,9 @@
           $insert_sql_data = array('manufacturers_id' => $products_id,
                            'languages_id' => $language_id);
           $sql_data_array = /*xtc_*/array_merge($sql_data_array, $insert_sql_data);
-          xtc_db_perform($oosDBTable['manufacturers']_INFO, $sql_data_array);
+          oosDBPerform($oosDBTable['manufacturers']_INFO, $sql_data_array);
         } elseif ($exists==1) {
-          xtc_db_perform($oosDBTable['manufacturers']_INFO, $sql_data_array, 'update', 'manufacturers_id = \'' . oosDBInput($manufacturers_id) . '\' and languages_id = \'' . $language_id . '\'');
+          oosDBPerform($oosDBTable['manufacturers']_INFO, $sql_data_array, 'update', 'manufacturers_id = \'' . oosDBInput($manufacturers_id) . '\' and languages_id = \'' . $language_id . '\'');
         }
       }
       print_xml_status (0, $_POST['action'], 'OK', $mode ,'MANUFACTURERS_ID', $mID);
@@ -1301,7 +1301,7 @@
    $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
 
     // insert data
-    xtc_db_perform( $oosDBTable['products'], $sql_data_array);
+    oosDBPerform( $oosDBTable['products'], $sql_data_array);
 
     $products_id = mysql_insert_id();
 
@@ -1313,7 +1313,7 @@
     $sql_data_array = array_merge($sql_data_array, $update_sql_data);
 
     // UPDATE data
-    xtc_db_perform( $oosDBTable['products'], $sql_data_array, 'update', 'products_id = \'' . oosDBInput($products_id) . '\'');
+    oosDBPerform( $oosDBTable['products'], $sql_data_array, 'update', 'products_id = \'' . oosDBInput($products_id) . '\'');
   }
 
   $languages = $languages_array;
@@ -1376,12 +1376,12 @@
                                'language_id' => $language_id);
 
       $sql_data_array = array_merge($sql_data_array, $insert_sql_data);
-      xtc_db_perform( $oosDBTable['products_description'], $sql_data_array);
+      oosDBPerform( $oosDBTable['products_description'], $sql_data_array);
     }
     elseif (($exists==1)and($language_id==$LangID)) // Update
     {
       // Nur die Daten in der akt. Sprache aendern !
-      xtc_db_perform( $oosDBTable['products_description'], $sql_data_array, 'update', 'products_id = \'' . oosDBInput($products_id) . '\' and language_id = \'' . $language_id . '\'');
+      oosDBPerform( $oosDBTable['products_description'], $sql_data_array, 'update', 'products_id = \'' . oosDBInput($products_id) . '\' and language_id = \'' . $language_id . '\'');
     }
     }
     if (file_exists('cao_produpd_2.php')) { include('cao_produpd_2.php'); }
@@ -1557,11 +1557,11 @@
 
         $sql_data_array = /*xtc_*/array_merge($sql_data_array, $insert_sql_data);
 
-        xtc_db_perform($oosDBTable['categories'], $sql_data_array);
+        oosDBPerform($oosDBTable['categories'], $sql_data_array);
       } elseif ($exists==1) {
         $mode='UPDATE';
 
-        xtc_db_perform($oosDBTable['categories'], $sql_data_array, 'update', 'categories_id = \'' . oosDBInput($CatID) . '\'');
+        oosDBPerform($oosDBTable['categories'], $sql_data_array, 'update', 'categories_id = \'' . oosDBInput($CatID) . '\'');
       }
 
       //$languages = xtc_get_languages();
@@ -1614,10 +1614,10 @@
                                  'language_id' => $language_id);
 
           $sql_data_array = /*xtc_*/array_merge($sql_data_array, $insert_sql_data);
-          xtc_db_perform($oosDBTable['categories_description'], $sql_data_array);
+          oosDBPerform($oosDBTable['categories_description'], $sql_data_array);
         } elseif (($exists==1)and($language_id==$LangID)) {
           // Nur 1 Sprache aktualisieren
-          xtc_db_perform($oosDBTable['categories_description'], $sql_data_array, 'update', 'categories_id = \'' . oosDBInput($CatID) . '\' and language_id = \'' . $language_id . '\'');
+          oosDBPerform($oosDBTable['categories_description'], $sql_data_array, 'update', 'categories_id = \'' . oosDBInput($CatID) . '\' and language_id = \'' . $language_id . '\'');
         }
       }
       print_xml_status (0, $_POST['action'], 'OK', $mode, '', '');
@@ -1880,21 +1880,24 @@
       $mode = 'UPDATE';
       $address_book_result = $db->Execute("SELECT customers_default_address_id FROM ".$oosDBTable['customers']." WHERE customers_id = '". (int)$customers_id ."' LIMIT 1");
       $customer = xtc_db_fetch_array($address_book_result);
-      xtc_db_perform($oosDBTable['customers'], $sql_customers_data_array, 'update', "customers_id = '" . intval($cID) . "' LIMIT 1");
-      xtc_db_perform($oosDBTable['address_book'], $sql_address_data_array, 'update', "customers_id = '" . intval($cID) . "' AND address_book_id = '".$customer['customers_default_address_id']."' LIMIT 1");
+      oosDBPerform($oosDBTable['customers'], $sql_customers_data_array, 'update', "customers_id = '" . intval($cID) . "' LIMIT 1");
+      oosDBPerform($oosDBTable['address_book'], $sql_address_data_array, 'update', "customers_id = '" . intval($cID) . "' AND address_book_id = '".$customer['customers_default_address_id']."' LIMIT 1");
       $db->Execute("UPDATE " .  $oosDBTable['customers_info'] . " SET customers_info_date_account_last_modified = now() WHERE customers_info_id = '" . (int)$customers_id . "'  LIMIT 1");
     } else {
       $mode= 'APPEND';
       if (strlen($_POST['customers_password'])==0) {
         // generate PW if empty
-        $pw = xtc_RandomString(8);
-        $sql_customers_data_array['customers_password']=xtc_create_password($pw);
+        $newpass = oosCreateRandomValue(ENTRY_PASSWORD_MIN_LENGTH);
+        $crypted_password = oosEncryptPassword($newpass);
+        $sql_customers_data_array['customers_password'] = $crypted_password;
       }
-      xtc_db_perform($oosDBTable['customers'], $sql_customers_data_array);
-      $customers_id = xtc_db_insert_id();
+      oosDBPerform($oosDBTable['customers'], $sql_customers_data_array);
+
+      $customers_id = $db->Insert_ID();
       $sql_address_data_array['customers_id'] = $customers_id;
-      xtc_db_perform($oosDBTable['address_book'], $sql_address_data_array);
-      $address_id = xtc_db_insert_id();
+      oosDBPerform($oosDBTable['address_book'], $sql_address_data_array);
+
+      $address_id = $db->Insert_ID();
       $db->Execute("UPDATE " . $oosDBTable['customers'] . " SET customers_default_address_id = '" . (int)$address_id . "' WHERE customers_id = '" . (int)$customers_id . "'");
       $db->Execute("UPDATE " . $oosDBTable['customers'] . " SET customers_status = '" . STANDARD_GROUP . "' WHERE customers_id = '" . (int)$customers_id . "'");
       $db->Execute("INSERT INTO " .  $oosDBTable['customers_info'] . " (customers_info_id, customers_info_number_of_logons, customers_info_date_account_created) values ('" . (int)$customers_id . "', '0', now())");
